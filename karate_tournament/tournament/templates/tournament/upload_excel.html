@@ -1,0 +1,92 @@
+{% extends 'tournament/base.html' %}
+
+{% block title %}Загрузка участников из Excel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Загрузка участников из Excel файла</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5><i class="bi bi-info-circle"></i> Инструкция:</h5>
+                    <ol>
+                        <li>Скачайте <a href="{% url 'download_template' tournament.id %}" class="alert-link">шаблон Excel файла</a></li>
+                        <li>Заполните его данными участников</li>
+                        <li>Загрузите заполненный файл через эту форму</li>
+                    </ol>
+                    <p class="mb-0"><strong>Обязательные колонки:</strong> Фамилия, Имя, Дата рождения, Пол, Вес, Клуб</p>
+                    <p class="mb-0"><small>Колонка "Тренер" - опциональна</small></p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.excel_file.id_for_label }}" class="form-label fw-bold">
+                            {{ form.excel_file.label }}
+                        </label>
+                        {{ form.excel_file }}
+                        {% if form.excel_file.help_text %}
+                        <div class="form-text">{{ form.excel_file.help_text }}</div>
+                        {% endif %}
+                        {% if form.excel_file.errors %}
+                        <div class="text-danger">{{ form.excel_file.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.clear_existing }}
+                        <label class="form-check-label fw-bold text-danger" for="{{ form.clear_existing.id_for_label }}">
+                            {{ form.clear_existing.label }}
+                        </label>
+                        <div class="form-text text-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i> 
+                            Внимание! Все существующие участники будут удалены!
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-upload"></i> Загрузить и обработать
+                        </button>
+                        <a href="{% url 'participant_list' tournament.id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Назад к списку участников
+                        </a>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <h5>Пример структуры файла:</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Фамилия</th>
+                                <th>Имя</th>
+                                <th>Дата рождения</th>
+                                <th>Пол</th>
+                                <th>Вес</th>
+                                <th>Клуб</th>
+                                <th>Тренер</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in example_data %}
+                            <tr>
+                                {% for cell in row %}
+                                <td>{{ cell }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

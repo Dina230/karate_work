@@ -1,0 +1,69 @@
+{% extends 'tournament/base.html' %}
+
+{% block title %}Главная - Турнир по каратэ{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Добро пожаловать в систему управления турниром по каратэ</h1>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card text-white bg-primary mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Участники</h5>
+                        <p class="card-text display-4">{{ total_participants|default:"0" }}</p>
+                        {% if first_tournament %}
+                        <a href="{% url 'participant_list' first_tournament.id %}" class="text-white">Просмотреть список →</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card text-white bg-success mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Проверено сегодня</h5>
+                        <p class="card-text display-4">{{ checked_in_today|default:"0" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Турниры</h5>
+                        <p class="card-text display-4">{{ tournaments.count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Активные турниры</h2>
+        <div class="list-group">
+            {% for tournament in tournaments %}
+                <div class="list-group-item">
+                    <h5>{{ tournament.name }}</h5>
+                    <p>Дата: {{ tournament.date }} | Место: {{ tournament.location }}</p>
+                    <a href="{% url 'participant_list' tournament.id %}" class="btn btn-sm btn-primary">Участники</a>
+                    <a href="{% url 'category_list' tournament.id %}" class="btn btn-sm btn-success">Категории</a>
+                    <a href="{% url 'tournament_stats' tournament.id %}" class="btn btn-sm btn-info">Статистика</a>
+                </div>
+            {% empty %}
+                <div class="alert alert-warning">
+                    <p class="mb-0">Нет активных турниров. Создайте турнир в админ-панели.</p>
+                    <a href="/admin/tournament/tournament/add/" class="btn btn-primary mt-2">Создать турнир</a>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            {% if first_tournament %}
+            <a href="{% url 'register_participant' first_tournament.id %}" class="btn btn-primary">Зарегистрировать участника</a>
+            <a href="{% url 'category_list' first_tournament.id %}" class="btn btn-success">Категории и сетки</a>
+            {% endif %}
+            <a href="/admin/" class="btn btn-secondary">Админ-панель</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

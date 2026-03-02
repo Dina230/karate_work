@@ -1,0 +1,43 @@
+{% extends 'tournament/base.html' %}
+
+{% block title %}Удаление участника{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    Подтверждение удаления
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                <i class="bi bi-person-x fs-1 text-danger mb-3 d-block"></i>
+                <h3>{{ participant.last_name }} {{ participant.first_name }}</h3>
+                <p class="lead">
+                    {{ participant.age_category }} • {{ participant.weight_category }} • {{ participant.club }}
+                </p>
+                <p class="text-danger fw-bold">
+                    Вы уверены, что хотите удалить этого участника?
+                </p>
+                <p class="text-muted">
+                    <small>Это действие нельзя будет отменить.</small>
+                </p>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'participant_list' participant.tournament.id %}" class="btn btn-secondary btn-lg me-md-2">
+                            <i class="bi bi-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

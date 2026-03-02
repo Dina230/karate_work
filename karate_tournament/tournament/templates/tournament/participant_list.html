@@ -1,0 +1,247 @@
+{% extends 'tournament/base.html' %}
+
+{% block title %}Список участников - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-people"></i> 
+                Список участников: {{ tournament.name }}
+            </h1>
+            <span class="badge bg-primary fs-5">
+                Всего: {{ participants.count }}
+            </span>
+        </div>
+
+        <!-- Кнопки действий -->
+        <div class="btn-group mb-4">
+            <a href="{% url 'register_participant' tournament.id %}" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Добавить вручную
+            </a>
+            <a href="{% url 'upload_excel' tournament.id %}" class="btn btn-success">
+                <i class="bi bi-file-excel"></i> Загрузить из Excel
+            </a>
+            <a href="{% url 'download_template' tournament.id %}" class="btn btn-info">
+                <i class="bi bi-download"></i> Скачать шаблон
+            </a>
+            <a href="{% url 'category_list' tournament.id %}" class="btn btn-warning">
+                <i class="bi bi-grid"></i> Категории
+            </a>
+            <a href="{% url 'tournament_stats' tournament.id %}" class="btn btn-secondary">
+                <i class="bi bi-graph-up"></i> Статистика
+            </a>
+        </div>
+
+        <!-- Поиск -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3" id="filterForm">
+                    <div class="col-md-3">
+                        <label class="form-label">Возрастная категория</label>
+                        <select name="age" class="form-select" onchange="this.form.submit()">
+                            <option value="">Все возраста</option>
+                            {% for age in age_categories %}
+                            <option value="{{ age }}" {% if selected_age == age %}selected{% endif %}>
+                                {{ age }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Пол</label>
+                        <select name="gender" class="form-select" onchange="this.form.submit()">
+                            <option value="">Все</option>
+                            <option value="M" {% if selected_gender == 'M' %}selected{% endif %}>Мужчины</option>
+                            <option value="F" {% if selected_gender == 'F' %}selected{% endif %}>Женщины</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Весовая категория</label>
+                        <select name="weight" class="form-select" onchange="this.form.submit()">
+                            <option value="">Все веса</option>
+                            {% for weight in weight_categories %}
+                            <option value="{{ weight }}" {% if selected_weight == weight %}selected{% endif %}>
+                                {{ weight }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{% url 'participant_list' tournament.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-eraser"></i> Сбросить
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <input type="text" name="search" class="form-control" placeholder="Поиск..." 
+                               value="{{ request.GET.search }}" id="searchInput">
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Таблица участников -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Фамилия</th>
+                                <th>Имя</th>
+                                <th>Возраст</th>
+                                <th>Пол</th>
+                                <th>Вес</th>
+                                <th>Категория</th>
+                                <th>Клуб</th>
+                                <th>Тренер</th>
+                                <th>Источник</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for participant in participants %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><strong>{{ participant.last_name }}</strong></td>
+                                <td>{{ participant.first_name }}</td>
+                                <td>{{ participant.age }} лет</td>
+                                <td>
+                                    {% if participant.gender == 'M' %}
+                                        <span class="badge bg-info">М</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Ж</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ participant.weight }} кг</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ participant.age_category }}</span><br>
+                                    <small class="text-muted">{{ participant.weight_category }}</small>
+                                </td>
+                                <td>{{ participant.club }}</td>
+                                <td>
+                                    {% if participant.coach %}
+                                        {{ participant.coach }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if participant.source_file %}
+                                        <span class="badge bg-success" title="Строка {{ participant.row_number }}">
+                                            <i class="bi bi-file-excel"></i> Excel
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-pencil"></i> Вручную
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'edit_participant' participant.id %}" 
+                                           class="btn btn-outline-primary" 
+                                           title="Редактировать">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'delete_participant' participant.id %}" 
+                                           class="btn btn-outline-danger" 
+                                           title="Удалить"
+                                           onclick="return confirm('Вы уверены, что хотите удалить участника {{ participant.last_name }} {{ participant.first_name }}?')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="11" class="text-center py-5">
+                                    <i class="bi bi-people fs-1 d-block text-muted"></i>
+                                    <h4 class="text-muted mt-3">Нет зарегистрированных участников</h4>
+                                    <div class="mt-3">
+                                        <a href="{% url 'register_participant' tournament.id %}" class="btn btn-primary">
+                                            <i class="bi bi-person-plus"></i> Добавить первого участника
+                                        </a>
+                                        <a href="{% url 'upload_excel' tournament.id %}" class="btn btn-success">
+                                            <i class="bi bi-file-excel"></i> Загрузить из Excel
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Информация об импорте -->
+        {% if participants.count > 0 %}
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Статистика по источникам</h5>
+                    </div>
+                    <div class="card-body">
+                        {% with excel_count=participants.filter.exists %}
+                        <p>
+                            <span class="badge bg-success"><i class="bi bi-file-excel"></i> Из Excel:</span> 
+                            {{ participants.filter|length }} участников
+                        </p>
+                        <p>
+                            <span class="badge bg-secondary"><i class="bi bi-pencil"></i> Добавлено вручную:</span> 
+                            {{ participants.count }} участников
+                        </p>
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Быстрые действия</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="{% url 'category_list' tournament.id %}" class="btn btn-primary mb-2 w-100">
+                            <i class="bi bi-grid"></i> Перейти к категориям и сеткам
+                        </a>
+                        <a href="{% url 'generate_all_brackets' tournament.id %}" class="btn btn-success w-100">
+                            <i class="bi bi-braces"></i> Сгенерировать турнирные сетки
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- JavaScript для автопоиска -->
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('filterForm').submit();
+    }
+});
+</script>
+
+<style>
+.table td {
+    vertical-align: middle;
+}
+.badge {
+    font-size: 0.85rem;
+}
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+}
+</style>
+{% endblock %}
