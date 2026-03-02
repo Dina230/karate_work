@@ -5,28 +5,6 @@
 {% block content %}
 <div class="row">
     <div class="col-md-12">
-        <!-- ОТЛАДОЧНЫЙ БЛОК - временно, потом можно удалить -->
-        <div class="alert alert-info">
-            <h4>Отладочная информация:</h4>
-            <p><strong>Возрастная категория:</strong> {{ age_category }}</p>
-            <p><strong>Пол:</strong> {{ gender }} ({{ gender_display }})</p>
-            <p><strong>Весовая категория:</strong> {{ weight_category }}</p>
-            <p><strong>Участников в БД:</strong> {{ participants_count }}</p>
-
-            {% if debug_participants %}
-            <h5>Список участников из БД:</h5>
-            <ul>
-                {% for p in debug_participants %}
-                <li>{{ p.last_name }} {{ p.first_name }} (вес: {{ p.weight }} кг, клуб: {{ p.club }})</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-
-            {% if rounds %}
-            <h5>Найдено матчей: {{ rounds|length }} раундов</h5>
-            {% endif %}
-        </div>
-
         <!-- Заголовок -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>
@@ -64,31 +42,53 @@
             </div>
         </div>
 
-        <!-- Список участников категории -->
+        <!-- Список участников категории по клубам -->
         <div class="card mb-4">
-            <div class="card-header bg-secondary text-white">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="bi bi-people"></i>
                     Участники категории ({{ participants_count }})
                 </h5>
+                <span class="badge bg-light text-dark">
+                    {% regroup participants by club as club_list %}
+                    {{ club_list|length }} клубов
+                </span>
             </div>
             <div class="card-body">
-                <div class="row">
-                    {% for participant in participants %}
-                    <div class="col-md-3 mb-2">
-                        <div class="participant-card">
-                            <strong>{{ participant.last_name }} {{ participant.first_name }}</strong>
-                            <small class="text-muted d-block">
-                                {{ participant.club }} | {{ participant.weight }} кг
-                            </small>
+                {% regroup participants by club as club_list %}
+
+                {% if club_list %}
+                    <div class="accordion" id="clubAccordion">
+                        {% for club in club_list %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                                    <strong>{{ club.grouper }}</strong>
+                                    <span class="badge bg-primary ms-2">{{ club.list|length }}</span>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#clubAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        {% for participant in club.list %}
+                                        <div class="col-md-4 mb-2">
+                                            <div class="participant-card">
+                                                <strong>{{ participant.last_name }} {{ participant.first_name }}</strong>
+                                                <small class="text-muted d-block">
+                                                    {{ participant.weight }} кг
+                                                </small>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% empty %}
-                    <div class="col-12">
-                        <p class="text-muted text-center">Нет участников в этой категории</p>
-                    </div>
-                    {% endfor %}
-                </div>
+                {% else %}
+                    <p class="text-muted text-center">Нет участников в этой категории</p>
+                {% endif %}
             </div>
         </div>
 
@@ -97,7 +97,10 @@
         <div class="alert alert-warning text-center py-4 mb-4">
             <i class="bi bi-grid fs-1 d-block mb-3"></i>
             <h4>Турнирная сетка еще не создана</h4>
-            <p class="mb-3">В этой категории {{ participants_count }} участников.</p>
+            <p class="mb-3">В этой категории {{ participants_count }} участников из {{ club_list|length }} клубов.</p>
+            <p class="text-muted mb-3">
+                <i class="bi bi-info-circle"></i> Представители одного клуба не встретятся в первых раундах.
+            </p>
             <form method="post" action="{% url 'generate_bracket_for_category' tournament.id age_category gender weight_category %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-success btn-lg">
@@ -115,20 +118,34 @@
                 <h5 class="text-center mb-3">
                     {% if matches.0.round_name %}
                         {{ matches.0.round_name }}
+                        {% if round_num == rounds|length %}
+                            <span class="badge bg-warning text-dark">Финал</span>
+                        {% endif %}
                     {% else %}
                         Раунд {{ round_num }}
                     {% endif %}
                 </h5>
 
                 {% for match in matches %}
-                <div class="bracket-match {% if match.winner == match.participant1 %}winner-1{% elif match.winner == match.participant2 %}winner-2{% endif %}">
+                <div class="bracket-match
+                    {% if match.winner == match.participant1 %}winner-1{% elif match.winner == match.participant2 %}winner-2{% endif %}
+                    {% if match.participant1 and match.participant2 and match.participant1.club == match.participant2.club %}
+                        {% if round_num == rounds|length %}
+                            final-same-club
+                        {% else %}
+                            same-club-warning
+                        {% endif %}
+                    {% endif %}">
+
                     <!-- Участник 1 -->
                     <div class="participant-item {% if match.winner == match.participant1 %}winner{% endif %}">
                         <div class="d-flex justify-content-between align-items-center">
                             <span>
                                 {% if match.participant1 %}
                                     <strong>{{ match.participant1.last_name }}</strong> {{ match.participant1.first_name }}
-                                    <small class="text-muted d-block">{{ match.participant1.club }}</small>
+                                    <small class="text-muted d-block">
+                                        {{ match.participant1.club|truncatechars:20 }}
+                                    </small>
                                 {% else %}
                                     <span class="text-muted fst-italic">Ожидание победителя</span>
                                 {% endif %}
@@ -145,7 +162,9 @@
                             <span>
                                 {% if match.participant2 %}
                                     <strong>{{ match.participant2.last_name }}</strong> {{ match.participant2.first_name }}
-                                    <small class="text-muted d-block">{{ match.participant2.club }}</small>
+                                    <small class="text-muted d-block">
+                                        {{ match.participant2.club|truncatechars:20 }}
+                                    </small>
                                 {% else %}
                                     <span class="text-muted fst-italic">Ожидание победителя</span>
                                 {% endif %}
@@ -155,6 +174,21 @@
                             {% endif %}
                         </div>
                     </div>
+
+                    <!-- Индикатор одного клуба -->
+                    {% if match.participant1 and match.participant2 and match.participant1.club == match.participant2.club %}
+                        <div class="mt-1 text-center">
+                            {% if round_num == rounds|length %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-star-fill"></i> Финальный бой внутри клуба
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-exclamation-triangle-fill"></i> Один клуб
+                                </span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
 
                     <!-- Кнопка ввода результата -->
                     <div class="mt-2 text-center">
@@ -178,6 +212,27 @@
             </div>
             {% endfor %}
         </div>
+
+        <!-- Легенда -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle"></i> Информация о сетке:</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <span class="badge bg-success me-2">Зеленый</span> Победитель
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-danger me-2">Красная граница</span> Встреча внутри одного клуба (только в финале)
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-warning text-dark me-2">Желтый</span> Финальный бой
+                    </div>
+                </div>
+                <p class="text-muted mt-2 mb-0">
+                    <i class="bi bi-check-circle"></i> Представители одного клуба распределены по разным половинам сетки.
+                </p>
+            </div>
+        </div>
         {% endif %}
 
         <!-- Навигация -->
@@ -185,6 +240,12 @@
             <a href="{% url 'category_list' tournament.id %}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Назад к категориям
             </a>
+
+            {% if participants_count >= 2 and not rounds %}
+            <a href="{% url 'generate_all_brackets' tournament.id %}" class="btn btn-success ms-2">
+                <i class="bi bi-grid"></i> Сгенерировать все сетки
+            </a>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -199,7 +260,7 @@
 }
 
 .bracket-round {
-    min-width: 300px;
+    min-width: 320px;
 }
 
 .bracket-match {
@@ -210,11 +271,12 @@
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     border-left: 5px solid #007bff;
     transition: transform 0.2s;
+    position: relative;
 }
 
 .bracket-match:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
 .bracket-match.winner-1 {
@@ -223,6 +285,16 @@
 
 .bracket-match.winner-2 {
     border-left-color: #dc3545;
+}
+
+.bracket-match.same-club-warning {
+    border-left-color: #dc3545;
+    background: #fff5f5;
+}
+
+.bracket-match.final-same-club {
+    border-left-color: #ffc107;
+    background: #fff9e6;
 }
 
 .participant-item {
@@ -249,6 +321,7 @@
     padding: 10px;
     border: 1px solid #dee2e6;
     transition: all 0.2s;
+    height: 100%;
 }
 
 .participant-card:hover {
@@ -278,6 +351,16 @@
     padding: 0.4rem 0.6rem;
 }
 
+.accordion-button:not(.collapsed) {
+    background-color: #e7f1ff;
+    color: #0056b3;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(0,0,0,.125);
+}
+
 /* Адаптивность для мобильных */
 @media (max-width: 768px) {
     .bracket-round {
@@ -291,6 +374,10 @@
     .score-badge {
         font-size: 0.8rem;
         padding: 2px 6px;
+    }
+
+    .participant-card {
+        font-size: 0.9rem;
     }
 }
 </style>
@@ -306,6 +393,16 @@ document.addEventListener('DOMContentLoaded', function() {
         match.addEventListener('mouseleave', function() {
             this.style.boxShadow = '0 3px 10px rgba(0,0,0,0.1)';
         });
+    });
+
+    // Автоматически закрывать алерты через 5 секунд
+    const alerts = document.querySelectorAll('.alert:not(.alert-info)');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        }, 5000);
     });
 });
 </script>

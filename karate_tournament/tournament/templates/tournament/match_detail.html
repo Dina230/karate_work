@@ -1,0 +1,363 @@
+{% extends 'tournament/base.html' %}
+
+{% block title %}Детали матча{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-trophy"></i> 
+                    Детали поединка: {{ match.round_name }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Информация о категории -->
+                <div class="alert alert-info">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Категория:</strong> {{ match.age_category }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Пол:</strong> 
+                            {% if match.gender == 'M' %}Мужчины{% else %}Женщины{% endif %}
+                        </div>
+                        <div class="col-md-5">
+                            <strong>Вес:</strong> {{ match.weight_category }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Участники -->
+                <div class="row mb-4">
+                    <div class="col-md-5 text-center">
+                        <div class="participant-box {% if match.winner == match.participant1 %}winner-box{% endif %}">
+                            {% if match.participant1 %}
+                                <h3>{{ match.participant1.last_name }}</h3>
+                                <h4>{{ match.participant1.first_name }}</h4>
+                                <p class="text-muted">
+                                    {{ match.participant1.club }} | {{ match.participant1.weight }} кг
+                                </p>
+                                {% if match.winner == match.participant1 %}
+                                    <span class="badge bg-success">Победитель</span>
+                                {% endif %}
+                            {% else %}
+                                <h4 class="text-muted">Участник 1 не определен</h4>
+                                <p class="text-muted">Ожидание победителя предыдущего боя</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-2 text-center d-flex align-items-center justify-content-center">
+                        <h1 class="vs-text">VS</h1>
+                    </div>
+
+                    <div class="col-md-5 text-center">
+                        <div class="participant-box {% if match.winner == match.participant2 %}winner-box{% endif %}">
+                            {% if match.participant2 %}
+                                <h3>{{ match.participant2.last_name }}</h3>
+                                <h4>{{ match.participant2.first_name }}</h4>
+                                <p class="text-muted">
+                                    {{ match.participant2.club }} | {{ match.participant2.weight }} кг
+                                </p>
+                                {% if match.winner == match.participant2 %}
+                                    <span class="badge bg-success">Победитель</span>
+                                {% endif %}
+                            {% else %}
+                                <h4 class="text-muted">Участник 2 не определен</h4>
+                                <p class="text-muted">Ожидание победителя предыдущего боя</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Форма ввода результатов -->
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-center">
+                                {% if match.participant1 %}
+                                    {{ match.participant1.last_name }} {{ match.participant1.first_name }}
+                                {% else %}
+                                    Участник 1
+                                {% endif %}
+                            </h5>
+                            <div class="mb-3">
+                                <label class="form-label">Очки:</label>
+                                <input type="number" name="score_p1" value="{{ match.score_p1 }}"
+                                       class="form-control" min="0" id="id_score_p1"
+                                       {% if not match.participant1 %}disabled{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="text-center">
+                                {% if match.participant2 %}
+                                    {{ match.participant2.last_name }} {{ match.participant2.first_name }}
+                                {% else %}
+                                    Участник 2
+                                {% endif %}
+                            </h5>
+                            <div class="mb-3">
+                                <label class="form-label">Очки:</label>
+                                <input type="number" name="score_p2" value="{{ match.score_p2 }}"
+                                       class="form-control" min="0" id="id_score_p2"
+                                       {% if not match.participant2 %}disabled{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Победитель:</label>
+                                <select name="winner" class="form-select" id="id_winner"
+                                        {% if not match.participant1 or not match.participant2 %}disabled{% endif %}>
+                                    <option value="">-- Выберите победителя --</option>
+                                    {% if match.participant1 %}
+                                    <option value="{{ match.participant1.id }}"
+                                        {% if match.winner_id == match.participant1.id %}selected{% endif %}>
+                                        {{ match.participant1.last_name }} {{ match.participant1.first_name }}
+                                    </option>
+                                    {% endif %}
+                                    {% if match.participant2 %}
+                                    <option value="{{ match.participant2.id }}"
+                                        {% if match.winner_id == match.participant2.id %}selected{% endif %}>
+                                        {{ match.participant2.last_name }} {{ match.participant2.first_name }}
+                                    </option>
+                                    {% endif %}
+                                </select>
+                                {% if not match.participant1 or not match.participant2 %}
+                                <div class="form-text text-warning">
+                                    Ожидание определения обоих участников
+                                </div>
+                                {% else %}
+                                <div class="form-text">Выберите победителя поединка</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Статус:</label>
+                                <select name="status" class="form-select" id="id_status">
+                                    <option value="scheduled" {% if match.status == 'scheduled' %}selected{% endif %}>
+                                        Запланирован
+                                    </option>
+                                    <option value="in_progress" {% if match.status == 'in_progress' %}selected{% endif %}>
+                                        В процессе
+                                    </option>
+                                    <option value="completed" {% if match.status == 'completed' %}selected{% endif %}>
+                                        Завершен
+                                    </option>
+                                    <option value="walkover" {% if match.status == 'walkover' %}selected{% endif %}>
+                                        Неявка
+                                    </option>
+                                </select>
+                                <div class="form-text">
+                                    "Завершен" - если бой состоялся<br>
+                                    "Неявка" - если участник не явился
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'category_bracket' match.tournament.id match.age_category match.gender match.weight_category %}"
+                           class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary"
+                                {% if not match.participant1 or not match.participant2 %}disabled{% endif %}>
+                            <i class="bi bi-save"></i> Сохранить результат
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Информация о следующем матче -->
+                {% if match.next_match %}
+                <div class="alert alert-info mt-4">
+                    <h5><i class="bi bi-arrow-right-circle"></i> Следующий матч:</h5>
+                    <p class="mb-0">
+                        <strong>{{ match.next_match.round_name }}:</strong><br>
+                        {% if match.next_match.participant1 and match.next_match.participant2 %}
+                            {{ match.next_match.participant1.last_name }} {{ match.next_match.participant1.first_name }} vs
+                            {{ match.next_match.participant2.last_name }} {{ match.next_match.participant2.first_name }}
+                        {% elif match.next_match.participant1 %}
+                            {{ match.next_match.participant1.last_name }} {{ match.next_match.participant1.first_name }} vs
+                            <span class="text-muted">Ожидание победителя</span>
+                        {% elif match.next_match.participant2 %}
+                            <span class="text-muted">Ожидание победителя</span> vs
+                            {{ match.next_match.participant2.last_name }} {{ match.next_match.participant2.first_name }}
+                        {% else %}
+                            <span class="text-muted">Ожидание победителей предыдущих боев</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-0 mt-2">
+                        <small>После сохранения результата победитель автоматически попадет в следующий матч</small>
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Кнопки быстрой неявки -->
+                {% if match.status == 'scheduled' and match.participant1 and match.participant2 %}
+                <div class="alert alert-warning mt-3">
+                    <h6><i class="bi bi-exclamation-triangle"></i> Быстрая неявка:</h6>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                onclick="setWalkover('{{ match.participant1.id }}')">
+                            Неявка {{ match.participant1.last_name }}
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                onclick="setWalkover('{{ match.participant2.id }}')">
+                            Неявка {{ match.participant2.last_name }}
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Если один из участников не определен -->
+                {% if not match.participant1 or not match.participant2 %}
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-info-circle"></i>
+                    Этот матч нельзя завершить, пока не определены оба участника.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.participant-box {
+    border: 2px solid #dee2e6;
+    border-radius: 15px;
+    padding: 20px;
+    background: #f8f9fa;
+    transition: all 0.3s;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.participant-box.winner-box {
+    border-color: #28a745;
+    background: #d4edda;
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.3);
+}
+
+.vs-text {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #dc3545;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-control, .form-select {
+    border-radius: 10px;
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+}
+
+.form-control:disabled, .form-select:disabled {
+    background-color: #e9ecef;
+    opacity: 0.7;
+}
+
+.btn {
+    border-radius: 25px;
+    padding: 10px 25px;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.alert {
+    border-radius: 15px;
+    border: none;
+}
+
+.badge {
+    font-size: 1rem;
+    padding: 8px 15px;
+    border-radius: 25px;
+}
+</style>
+
+<script>
+// Автоматическое определение победителя при изменении счета
+document.addEventListener('DOMContentLoaded', function() {
+    const score1 = document.getElementById('id_score_p1');
+    const score2 = document.getElementById('id_score_p2');
+    const winnerSelect = document.getElementById('id_winner');
+
+    if (score1 && score2 && winnerSelect && !score1.disabled && !score2.disabled) {
+        function updateWinner() {
+            const val1 = parseInt(score1.value) || 0;
+            const val2 = parseInt(score2.value) || 0;
+
+            if (val1 > val2 && winnerSelect.options.length > 1) {
+                // Выбираем первого участника
+                winnerSelect.selectedIndex = 1;
+            } else if (val2 > val1 && winnerSelect.options.length > 2) {
+                // Выбираем второго участника
+                winnerSelect.selectedIndex = 2;
+            }
+        }
+
+        score1.addEventListener('input', updateWinner);
+        score2.addEventListener('input', updateWinner);
+    }
+
+    // Подтверждение при сохранении
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const status = document.getElementById('id_status').value;
+            const winner = document.getElementById('id_winner').value;
+            const score1 = document.getElementById('id_score_p1');
+            const score2 = document.getElementById('id_score_p2');
+
+            if (status === 'completed') {
+                if (!winner) {
+                    e.preventDefault();
+                    alert('Выберите победителя!');
+                    return false;
+                }
+                if (winner) {
+                    return confirm('Сохранить результат матча?');
+                }
+            }
+
+            if (status === 'walkover') {
+                return confirm('Подтвердить неявку?');
+            }
+        });
+    }
+});
+
+// Функция для быстрой неявки
+function setWalkover(winnerId) {
+    if (confirm('Подтвердить неявку соперника?')) {
+        const form = document.querySelector('form');
+        document.getElementById('id_winner').value = winnerId;
+        document.getElementById('id_status').value = 'walkover';
+        document.getElementById('id_score_p1').value = '0';
+        document.getElementById('id_score_p2').value = '0';
+        form.submit();
+    }
+}
+</script>
+{% endblock %}
