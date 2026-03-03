@@ -1,6 +1,31 @@
 from django import forms
-from .models import Participant, Match
+from .models import Participant, Match, Tournament
 from datetime import date
+
+
+class TournamentForm(forms.ModelForm):
+    """Форма создания турнира"""
+
+    class Meta:
+        model = Tournament
+        fields = ['name', 'date', 'location', 'registration_deadline', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Название турнира'}),
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Место проведения'}),
+            'registration_deadline': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'name': 'Название турнира',
+            'date': 'Дата проведения',
+            'location': 'Место проведения',
+            'registration_deadline': 'Дедлайн регистрации',
+            'is_active': 'Активный турнир',
+        }
+        help_texts = {
+            'registration_deadline': 'Дата, до которой принимаются заявки',
+        }
 
 
 class ParticipantForm(forms.ModelForm):
@@ -15,8 +40,8 @@ class ParticipantForm(forms.ModelForm):
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Иван'}),
             'gender': forms.Select(attrs={'class': 'form-control'}),
             'weight': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'placeholder': '65.5'}),
-            'club': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Школа Каратэ Кёкусинкай-Кан РТ'}),
-            'coach': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Илюшин С.Н.'}),
+            'club': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Клуб "Восток"'}),
+            'coach': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Петров А.И.'}),
         }
 
     def clean_birth_date(self):

@@ -1,0 +1,577 @@
+{% extends 'tournament/base.html' %}
+
+{% block title %}Статистика турнира - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Заголовок с изюминкой -->
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div class="position-relative">
+                <h1 class="fw-400 mb-0">Статистика</h1>
+                <p class="text-muted small mt-1">{{ tournament.name }}</p>
+                <!-- ИЗЮМИНКА: Маленький индикатор -->
+                <span class="position-absolute top-0 start-100 translate-middle badge bg-light text-dark border">
+                    {{ stats.total_participants }} уч.
+                </span>
+            </div>
+            <a href="{% url 'category_list' tournament.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Назад
+            </a>
+        </div>
+
+        <!-- Общая статистика - минималистичные карточки -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Всего участников</div>
+                        <div class="stat-value">{{ stats.total_participants }}</div>
+                        <div class="stat-trend positive">
+                            <i class="bi bi-arrow-up"></i> 100%
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #27ae60;">
+                        <i class="bi bi-gender-male"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Мужчины</div>
+                        <div class="stat-value">{{ stats.male }}</div>
+                        <div class="stat-trend">
+                            {% widthratio stats.male stats.total_participants 100 %}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #e74c3c;">
+                        <i class="bi bi-gender-female"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Женщины</div>
+                        <div class="stat-value">{{ stats.female }}</div>
+                        <div class="stat-trend">
+                            {% widthratio stats.female stats.total_participants 100 %}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #3498db;">
+                        <i class="bi bi-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Всего матчей</div>
+                        <div class="stat-value">{{ stats.total_matches }}</div>
+                        <div class="stat-trend">
+                            {{ stats.completed_matches }} завершено
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика по матчам - прогресс бары -->
+        <div class="row g-4 mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Статистика матчей
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-3">
+                                <div class="match-stat">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small text-muted">Завершено</span>
+                                        <span class="fw-500">{{ stats.completed_matches }}</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success"
+                                             style="width: {% widthratio stats.completed_matches stats.total_matches 100 %}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="match-stat">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small text-muted">Запланировано</span>
+                                        <span class="fw-500">{{ stats.scheduled_matches }}</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-info"
+                                             style="width: {% widthratio stats.scheduled_matches stats.total_matches 100 %}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="match-stat">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small text-muted">В процессе</span>
+                                        <span class="fw-500">{{ stats.in_progress_matches }}</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-warning"
+                                             style="width: {% widthratio stats.in_progress_matches stats.total_matches 100 %}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="match-stat">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small text-muted">Неявки</span>
+                                        <span class="fw-500">{{ stats.walkover_matches }}</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-danger"
+                                             style="width: {% widthratio stats.walkover_matches stats.total_matches 100 %}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Источники и Топ клубов -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-file-earmark-excel me-2"></i>
+                        Источники регистрации
+                    </div>
+                    <div class="card-body">
+                        <canvas id="sourceChart" style="max-height: 250px;"></canvas>
+                        <div class="row mt-4 text-center">
+                            <div class="col-6">
+                                <div class="source-badge excel">
+                                    <i class="bi bi-file-earmark-excel"></i>
+                                    <span class="ms-2">{{ excel_participants }}</span>
+                                </div>
+                                <div class="small text-muted mt-1">Excel</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="source-badge manual">
+                                    <i class="bi bi-pencil"></i>
+                                    <span class="ms-2">{{ manual_participants }}</span>
+                                </div>
+                                <div class="small text-muted mt-1">Вручную</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-trophy me-2"></i>
+                        Топ-5 клубов
+                    </div>
+                    <div class="card-body">
+                        {% for club, count in top_clubs %}
+                        <div class="club-row mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="club-name">{{ club }}</span>
+                                <span class="club-count">{{ count }}</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary"
+                                     style="width: {% widthratio count stats.total_participants 100 %}%"></div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center py-4">Нет данных</p>
+                        {% endfor %}
+                        <div class="text-muted small mt-3">
+                            Всего клубов: <span class="fw-500">{{ total_clubs }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Распределения -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-calendar me-2"></i>
+                        Возрастные категории
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <tbody>
+                                    {% for age, count in age_distribution %}
+                                    <tr>
+                                        <td class="ps-4">{{ age }}</td>
+                                        <td class="text-center" style="width: 80px;">
+                                            <span class="badge bg-primary">{{ count }}</span>
+                                        </td>
+                                        <td class="text-end pe-4" style="width: 80px;">
+                                            <span class="text-muted">{% widthratio count stats.total_participants 100 %}%</span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4">Нет данных</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        Весовые категории
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <tbody>
+                                    {% for weight, count in weight_distribution %}
+                                    <tr>
+                                        <td class="ps-4">{{ weight }}</td>
+                                        <td class="text-end pe-4" style="width: 80px;">
+                                            <span class="badge bg-primary">{{ count }}</span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="2" class="text-center py-4">Нет данных</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Информация о турнире -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>
+                Информация о турнире
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-row mb-3">
+                            <span class="info-label">Название</span>
+                            <span class="info-value">{{ tournament.name }}</span>
+                        </div>
+                        <div class="info-row mb-3">
+                            <span class="info-label">Дата проведения</span>
+                            <span class="info-value">{{ tournament.date }}</span>
+                        </div>
+                        <div class="info-row mb-3">
+                            <span class="info-label">Место проведения</span>
+                            <span class="info-value">{{ tournament.location }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-row mb-3">
+                            <span class="info-label">Дедлайн регистрации</span>
+                            <span class="info-value">{{ tournament.registration_deadline|default:"Не указан" }}</span>
+                        </div>
+                        <div class="info-row mb-3">
+                            <span class="info-label">Статус</span>
+                            <span class="info-value">
+                                {% if tournament.is_active %}
+                                    <span class="badge bg-success">Активный</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Неактивный</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Скрипт для графика -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('sourceChart').getContext('2d');
+
+    // ИЗЮМИНКА: Градиент для графика
+    var excelGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    excelGradient.addColorStop(0, '#27ae60');
+    excelGradient.addColorStop(1, '#2ecc71');
+
+    var manualGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    manualGradient.addColorStop(0, '#7f8c8d');
+    manualGradient.addColorStop(1, '#95a5a6');
+
+    var sourceChart = new Chart(ctx, {
+        type: 'doughnut',  // ИЗЮМИНКА: Изменил на пончик вместо пирога
+        data: {
+            labels: ['Из Excel', 'Добавлено вручную'],
+            datasets: [{
+                data: [{{ excel_participants }}, {{ manual_participants }}],
+                backgroundColor: [excelGradient, manualGradient],
+                borderColor: ['white', 'white'],
+                borderWidth: 3,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '60%',  // ИЗЮМИНКА: Делает дырку в середине
+            plugins: {
+                legend: {
+                    display: false  // Убрал легенду, так как есть подписи внизу
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        }
+    });
+});
+</script>
+
+<style>
+/* Минималистичные стили для статистики */
+
+/* Карточки статистики */
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #2d3436;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+    background: #2d3436;
+    color: white;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #95a5a6;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #2d3436;
+    margin-bottom: 0.25rem;
+}
+
+.stat-trend {
+    font-size: 0.8rem;
+    color: #95a5a6;
+}
+
+.stat-trend.positive {
+    color: #27ae60;
+}
+
+/* Карточки */
+.card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+
+.card-header {
+    background: white;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 1.25rem 1.5rem;
+    font-weight: 500;
+    color: #2d3436;
+}
+
+.card-header i {
+    color: #e74c3c;
+}
+
+/* Прогресс бары */
+.progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+}
+
+.progress-bar {
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+
+/* Статистика матчей */
+.match-stat {
+    padding: 0.5rem;
+}
+
+/* Бейджи источников */
+.source-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    font-weight: 500;
+}
+
+.source-badge.excel {
+    background: #e8f5e9;
+    color: #27ae60;
+}
+
+.source-badge.manual {
+    background: #f0f0f0;
+    color: #7f8c8d;
+}
+
+.source-badge i {
+    font-size: 1.1rem;
+}
+
+/* Клубы */
+.club-row {
+    padding: 0.5rem 0;
+}
+
+.club-name {
+    font-weight: 500;
+    color: #2d3436;
+}
+
+.club-count {
+    font-weight: 500;
+    color: #95a5a6;
+}
+
+/* Информационные строки */
+.info-row {
+    display: flex;
+    align-items: baseline;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed #f0f0f0;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    width: 150px;
+    font-size: 0.9rem;
+    color: #95a5a6;
+}
+
+.info-value {
+    flex: 1;
+    font-weight: 450;
+    color: #2d3436;
+}
+
+/* Таблицы */
+.table {
+    margin-bottom: 0;
+}
+
+.table td {
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    color: #2d3436;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #fafafa;
+}
+
+/* Бейджи */
+.badge {
+    font-weight: 450;
+    padding: 0.4rem 0.8rem;
+    border-radius: 30px;
+}
+
+.badge.bg-primary {
+    background-color: #2d3436 !important;
+}
+
+.badge.bg-success {
+    background-color: #27ae60 !important;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .info-label {
+        width: auto;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

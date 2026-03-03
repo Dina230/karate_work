@@ -4,6 +4,10 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
 
+    # Управление турнирами
+    path('add-tournament/', views.add_tournament, name='add_tournament'),
+    path('tournament/<int:tournament_id>/delete/', views.delete_tournament, name='delete_tournament'),
+
     # Регистрация и управление участниками
     path('tournament/<int:tournament_id>/register/', views.register_participant, name='register_participant'),
     path('tournament/<int:tournament_id>/participants/', views.participant_list, name='participant_list'),

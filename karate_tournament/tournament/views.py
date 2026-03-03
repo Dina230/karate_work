@@ -6,7 +6,7 @@ from datetime import date
 import pandas as pd
 
 from .models import Tournament, Participant, Match
-from .forms import ParticipantForm, MatchResultForm, ExcelUploadForm
+from .forms import ParticipantForm, MatchResultForm, ExcelUploadForm, TournamentForm
 from .utils import get_unique_categories, generate_bracket_for_category, get_category_stats, process_excel_file
 
 
@@ -20,12 +20,56 @@ def index(request):
     # Статистика
     total_participants = Participant.objects.count()
 
+    # Подсчет категорий (уникальные комбинации возраст+вес)
+    total_categories = 0
+    if first_tournament:
+        from .utils import get_unique_categories
+        total_categories = len(get_unique_categories(first_tournament))
+
     context = {
         'tournaments': tournaments,
         'first_tournament': first_tournament,
         'total_participants': total_participants,
+        'total_categories': total_categories,
     }
     return render(request, 'tournament/index.html', context)
+
+
+def add_tournament(request):
+    """Добавление нового турнира"""
+    if request.method == 'POST':
+        form = TournamentForm(request.POST)
+        if form.is_valid():
+            tournament = form.save()
+            messages.success(request, f'Турнир "{tournament.name}" успешно создан!')
+            return redirect('index')
+    else:
+        form = TournamentForm()
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'tournament/add_tournament.html', context)
+
+
+def delete_tournament(request, tournament_id):
+    """Удаление турнира"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    tournament_name = tournament.name
+
+    if request.method == 'POST':
+        # Удаляем все связанные объекты
+        Participant.objects.filter(tournament=tournament).delete()
+        Match.objects.filter(tournament=tournament).delete()
+        tournament.delete()
+
+        messages.success(request, f'Турнир "{tournament_name}" успешно удален!')
+        return redirect('index')
+
+    context = {
+        'tournament': tournament,
+    }
+    return render(request, 'tournament/delete_tournament.html', context)
 
 
 def register_participant(request, tournament_id):
@@ -191,24 +235,15 @@ def category_bracket(request, tournament_id, age_category, gender, weight_catego
     elif gender == 'М':
         gender_code = 'M'
 
-    # Добавляем отладочный вывод в консоль
-    print("=" * 50)
-    print(f"ЗАПРОС КАТЕГОРИИ: {age_category}, {gender} -> {gender_code}, {weight_category}")
-    print(f"Tournament ID: {tournament_id}")
-
-    # Получаем участников категории (используем gender_code)
+    # Получаем участников категории
     participants = Participant.objects.filter(
         tournament=tournament,
         age_category=age_category,
         gender=gender_code,
         weight_category=weight_category
-    )
+    ).order_by('club', 'last_name')
 
-    print(f"Найдено участников в БД: {participants.count()}")
-    for p in participants:
-        print(f"  - {p.last_name} {p.first_name} (ID: {p.id}, вес: {p.weight})")
-
-    # Получаем матчи (используем gender_code)
+    # Получаем матчи
     matches = Match.objects.filter(
         tournament=tournament,
         age_category=age_category,
@@ -216,31 +251,33 @@ def category_bracket(request, tournament_id, age_category, gender, weight_catego
         weight_category=weight_category
     ).order_by('round_number', 'match_order')
 
-    print(f"Найдено матчей: {matches.count()}")
-
     # Группируем по раундам
     rounds = {}
     for match in matches:
         if match.round_number not in rounds:
             rounds[match.round_number] = []
         rounds[match.round_number].append(match)
-        p1_name = match.participant1.last_name if match.participant1 else "TBD"
-        p2_name = match.participant2.last_name if match.participant2 else "TBD"
-        print(f"  Раунд {match.round_number}: {p1_name} vs {p2_name}")
 
     # Определяем пол для отображения
     gender_display = 'Мужчины' if gender_code == 'M' else 'Женщины'
 
-    # Создаем список участников для отладки в шаблоне
-    participants_list = []
+    # Группируем участников по клубам вручную
+    participants_by_club = {}
+    unique_clubs = set()
+
     for p in participants:
-        participants_list.append({
-            'id': p.id,
-            'last_name': p.last_name,
-            'first_name': p.first_name,
-            'club': p.club,
-            'weight': p.weight
-        })
+        club = p.club.strip()
+        unique_clubs.add(club)
+        if club not in participants_by_club:
+            participants_by_club[club] = []
+        participants_by_club[club].append(p)
+
+    unique_clubs_list = sorted(list(unique_clubs))
+    unique_clubs_count = len(unique_clubs_list)
+
+    # Сортируем участников внутри каждого клуба
+    for club in participants_by_club:
+        participants_by_club[club].sort(key=lambda x: x.last_name)
 
     context = {
         'tournament': tournament,
@@ -251,11 +288,10 @@ def category_bracket(request, tournament_id, age_category, gender, weight_catego
         'rounds': sorted(rounds.items()),
         'participants': participants,
         'participants_count': participants.count(),
-        'debug_participants': participants_list,
+        'participants_by_club': participants_by_club,
+        'unique_clubs_list': unique_clubs_list,
+        'unique_clubs_count': unique_clubs_count,
     }
-
-    print(f"Передано в шаблон: participants_count={participants.count()}")
-    print("=" * 50)
 
     return render(request, 'tournament/category_bracket.html', context)
 
@@ -280,11 +316,9 @@ def match_detail(request, match_id):
                     if not match.next_match.participant1:
                         match.next_match.participant1 = winner
                         match.next_match.save()
-                        print(f"Победитель {winner.last_name} добавлен в следующий матч (позиция 1)")
                     elif not match.next_match.participant2 and match.next_match.participant1 != winner:
                         match.next_match.participant2 = winner
                         match.next_match.save()
-                        print(f"Победитель {winner.last_name} добавлен в следующий матч (позиция 2)")
 
                 # Обработка боя за 3 место (полуфиналы)
                 if match.round_name == "1/2" and hasattr(match, 'third_place_match') and match.third_place_match:

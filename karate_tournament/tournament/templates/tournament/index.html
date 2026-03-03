@@ -4,66 +4,370 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-12">
-        <h1 class="mb-4">Добро пожаловать в систему управления турниром по каратэ</h1>
-        
-        <div class="row">
+    <div class="col-12">
+        <!-- Заголовок с изюминкой -->
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div class="position-relative">
+                <h1 class="fw-400 mb-0">Турниры</h1>
+                <!-- ИЗЮМИНКА: Маленький индикатор количества -->
+                {% if tournaments.count > 0 %}
+                <span class="counter-badge position-absolute top-0 start-100 translate-middle">
+                    {{ tournaments.count }}
+                </span>
+                {% endif %}
+            </div>
+            <a href="{% url 'add_tournament' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Создать турнир
+            </a>
+        </div>
+
+        <!-- Статистика с изюминкой -->
+        <div class="row g-4 mb-5">
             <div class="col-md-4">
-                <div class="card text-white bg-primary mb-3">
+                <div class="card stats-card">
                     <div class="card-body">
-                        <h5 class="card-title">Участники</h5>
-                        <p class="card-text display-4">{{ total_participants|default:"0" }}</p>
-                        {% if first_tournament %}
-                        <a href="{% url 'participant_list' first_tournament.id %}" class="text-white">Просмотреть список →</a>
-                        {% endif %}
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 stats-icon">
+                                <i class="bi bi-people fs-2"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="text-muted small mb-1">Участники</div>
+                                <div class="fs-2 fw-500 stats-number">{{ total_participants|default:"0" }}</div>
+                                <!-- ИЗЮМИНКА: Маленькая линия прогресса -->
+                                <div class="progress mt-2" style="height: 2px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ total_participants|default:0 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-4">
-                <div class="card text-white bg-success mb-3">
+                <div class="card stats-card">
                     <div class="card-body">
-                        <h5 class="card-title">Проверено сегодня</h5>
-                        <p class="card-text display-4">{{ checked_in_today|default:"0" }}</p>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 stats-icon">
+                                <i class="bi bi-grid fs-2"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="text-muted small mb-1">Категории</div>
+                                <div class="fs-2 fw-500 stats-number">{{ total_categories|default:"0" }}</div>
+                                <!-- ИЗЮМИНКА: Маленькая линия прогресса -->
+                                <div class="progress mt-2" style="height: 2px;">
+                                    <div class="progress-bar bg-success" style="width: {{ total_categories|default:0 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-4">
-                <div class="card text-white bg-info mb-3">
+                <div class="card stats-card">
                     <div class="card-body">
-                        <h5 class="card-title">Турниры</h5>
-                        <p class="card-text display-4">{{ tournaments.count }}</p>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 stats-icon">
+                                <i class="bi bi-calendar fs-2"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="text-muted small mb-1">Турниры</div>
+                                <div class="fs-2 fw-500 stats-number">{{ tournaments.count }}</div>
+                                <!-- ИЗЮМИНКА: Маленькая линия прогресса -->
+                                <div class="progress mt-2" style="height: 2px;">
+                                    <div class="progress-bar bg-info" style="width: {{ tournaments.count }}0%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <h2 class="mt-4">Активные турниры</h2>
-        <div class="list-group">
-            {% for tournament in tournaments %}
-                <div class="list-group-item">
-                    <h5>{{ tournament.name }}</h5>
-                    <p>Дата: {{ tournament.date }} | Место: {{ tournament.location }}</p>
-                    <a href="{% url 'participant_list' tournament.id %}" class="btn btn-sm btn-primary">Участники</a>
-                    <a href="{% url 'category_list' tournament.id %}" class="btn btn-sm btn-success">Категории</a>
-                    <a href="{% url 'tournament_stats' tournament.id %}" class="btn btn-sm btn-info">Статистика</a>
-                </div>
-            {% empty %}
-                <div class="alert alert-warning">
-                    <p class="mb-0">Нет активных турниров. Создайте турнир в админ-панели.</p>
-                    <a href="/admin/tournament/tournament/add/" class="btn btn-primary mt-2">Создать турнир</a>
-                </div>
-            {% endfor %}
+        <!-- Список турниров с изюминкой -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fs-4 fw-400 mb-0">Активные турниры</h2>
+            <!-- ИЗЮМИНКА: Счетчик турниров -->
+            <span class="badge bg-light text-dark">
+                {{ tournaments.count }} всего
+            </span>
         </div>
 
-        <div class="mt-4">
-            {% if first_tournament %}
-            <a href="{% url 'register_participant' first_tournament.id %}" class="btn btn-primary">Зарегистрировать участника</a>
-            <a href="{% url 'category_list' first_tournament.id %}" class="btn btn-success">Категории и сетки</a>
-            {% endif %}
-            <a href="/admin/" class="btn btn-secondary">Админ-панель</a>
+        {% for tournament in tournaments %}
+            <div class="card tournament-card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="tournament-info">
+                            <div class="d-flex align-items-center mb-2">
+                                <h3 class="fs-5 fw-500 mb-0">{{ tournament.name }}</h3>
+                                <!-- ИЗЮМИНКА: Статус турнира -->
+                                {% if tournament.is_active %}
+                                <span class="badge bg-success ms-2">Активный</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted small mb-2">
+                                <i class="bi bi-calendar3 me-1"></i> {{ tournament.date }}
+                                <span class="mx-2">·</span>
+                                <i class="bi bi-geo-alt me-1"></i> {{ tournament.location }}
+                            </div>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'participant_list' tournament.id %}" class="btn btn-sm btn-outline-primary" title="Участники">
+                                <i class="bi bi-people"></i>
+                                <span class="d-none d-md-inline ms-1">Участники</span>
+                            </a>
+                            <a href="{% url 'category_list' tournament.id %}" class="btn btn-sm btn-outline-success" title="Категории">
+                                <i class="bi bi-grid"></i>
+                                <span class="d-none d-md-inline ms-1">Категории</span>
+                            </a>
+                            <a href="{% url 'tournament_stats' tournament.id %}" class="btn btn-sm btn-outline-info" title="Статистика">
+                                <i class="bi bi-graph-up"></i>
+                                <span class="d-none d-md-inline ms-1">Статистика</span>
+                            </a>
+                            <a href="{% url 'delete_tournament' tournament.id %}" class="btn btn-sm btn-outline-danger" title="Удалить">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card empty-state-card">
+                <div class="card-body text-center py-5">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-trophy fs-1"></i>
+                    </div>
+                    <h3 class="fs-5 fw-400 mb-2">Нет активных турниров</h3>
+                    <p class="text-muted small mb-4">Создайте первый турнир, чтобы начать работу</p>
+                    <a href="{% url 'add_tournament' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> Создать турнир
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- Быстрые действия с изюминкой -->
+        {% if first_tournament %}
+        <div class="quick-actions mt-5 pt-3">
+            <h2 class="fs-4 fw-400 mb-3">Быстрые действия</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{% url 'register_participant' first_tournament.id %}" class="action-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-person-plus fs-1 mb-3"></i>
+                                <h4 class="fs-6 fw-500 mb-2">Добавить участника</h4>
+                                <p class="small text-muted mb-0">Ручная регистрация</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'upload_excel' first_tournament.id %}" class="action-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-file-earmark-excel fs-1 mb-3"></i>
+                                <h4 class="fs-6 fw-500 mb-2">Загрузить Excel</h4>
+                                <p class="small text-muted mb-0">Массовый импорт</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'category_list' first_tournament.id %}" class="action-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-grid fs-1 mb-3"></i>
+                                <h4 class="fs-6 fw-500 mb-2">Категории</h4>
+                                <p class="small text-muted mb-0">Управление сетками</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Ссылка на админку с изюминкой -->
+        <div class="admin-link mt-5 pt-4 text-center">
+            <a href="/admin/" class="text-muted text-decoration-none d-inline-flex align-items-center">
+                <i class="bi bi-gear me-2"></i>
+                Админ-панель
+                <i class="bi bi-box-arrow-up-right ms-2 small"></i>
+            </a>
         </div>
     </div>
 </div>
+
+<style>
+/* Дополнительные стили для изюминок на главной */
+
+/* ИЗЮМИНКА: Анимация для карточек статистики */
+.stats-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+}
+
+.stats-card .stats-icon {
+    color: #e74c3c;
+    transition: transform 0.3s ease;
+}
+
+.stats-card:hover .stats-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.stats-card .stats-number {
+    transition: color 0.3s ease;
+}
+
+.stats-card:hover .stats-number {
+    color: #e74c3c;
+}
+
+/* ИЗЮМИНКА: Стиль для карточек турниров */
+.tournament-card {
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.tournament-card:hover {
+    border-left-color: #e74c3c;
+    transform: translateX(5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* ИЗЮМИНКА: Анимация для кнопок в турнире */
+.tournament-card .btn-group .btn {
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.tournament-card:hover .btn-group .btn {
+    opacity: 1;
+}
+
+.tournament-card .btn-group .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* ИЗЮМИНКА: Стиль для пустого состояния */
+.empty-state-card {
+    border: 2px dashed #e0e0e0;
+    background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+}
+
+.empty-state-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* ИЗЮМИНКА: Карточки быстрых действий */
+.action-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.action-card .card {
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.action-card .card:hover {
+    transform: translateY(-5px);
+    border-color: #e74c3c;
+    box-shadow: 0 12px 24px rgba(231, 76, 60, 0.15);
+}
+
+.action-card .card:hover i {
+    color: #e74c3c;
+    transform: scale(1.1);
+}
+
+.action-card i {
+    transition: all 0.3s ease;
+    color: #95a5a6;
+}
+
+/* ИЗЮМИНКА: Ссылка на админку */
+.admin-link a {
+    position: relative;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+}
+
+.admin-link a:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    transform: translateY(-2px);
+}
+
+.admin-link a i {
+    transition: transform 0.3s ease;
+}
+
+.admin-link a:hover i {
+    transform: rotate(90deg);
+}
+
+/* ИЗЮМИНКА: Прогресс-бар */
+.progress {
+    background-color: #f0f0f0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 1s ease;
+}
+
+/* ИЗЮМИНКА: Бейдж срочности */
+.badge.bg-warning {
+    background-color: #f39c12 !important;
+    color: white !important;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .btn-group .btn {
+        border-radius: 30px !important;
+    }
+
+    .tournament-card .card-body .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .tournament-info {
+        width: 100%;
+    }
+}
+</style>
 {% endblock %}

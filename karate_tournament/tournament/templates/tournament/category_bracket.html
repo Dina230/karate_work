@@ -26,69 +26,19 @@
         <!-- Информация о категории -->
         <div class="alert alert-info">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <strong>Возрастная категория:</strong> {{ age_category }}
                 </div>
                 <div class="col-md-2">
                     <strong>Пол:</strong> {{ gender_display }}
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <strong>Весовая категория:</strong> {{ weight_category }}
                 </div>
                 <div class="col-md-3">
                     <strong>Участников:</strong>
                     <span class="badge bg-primary fs-6">{{ participants_count }}</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- Список участников категории по клубам -->
-        <div class="card mb-4">
-            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="bi bi-people"></i>
-                    Участники категории ({{ participants_count }})
-                </h5>
-                <span class="badge bg-light text-dark">
-                    {% regroup participants by club as club_list %}
-                    {{ club_list|length }} клубов
-                </span>
-            </div>
-            <div class="card-body">
-                {% regroup participants by club as club_list %}
-
-                {% if club_list %}
-                    <div class="accordion" id="clubAccordion">
-                        {% for club in club_list %}
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
-                                    <strong>{{ club.grouper }}</strong>
-                                    <span class="badge bg-primary ms-2">{{ club.list|length }}</span>
-                                </button>
-                            </h2>
-                            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#clubAccordion">
-                                <div class="accordion-body">
-                                    <div class="row">
-                                        {% for participant in club.list %}
-                                        <div class="col-md-4 mb-2">
-                                            <div class="participant-card">
-                                                <strong>{{ participant.last_name }} {{ participant.first_name }}</strong>
-                                                <small class="text-muted d-block">
-                                                    {{ participant.weight }} кг
-                                                </small>
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted text-center">Нет участников в этой категории</p>
-                {% endif %}
             </div>
         </div>
 
@@ -222,10 +172,10 @@
                         <span class="badge bg-success me-2">Зеленый</span> Победитель
                     </div>
                     <div class="col-md-4">
-                        <span class="badge bg-danger me-2">Красная граница</span> Встреча внутри одного клуба (только в финале)
+                        <span class="badge bg-danger me-2">Красная граница</span> Встреча внутри одного клуба (если не финал)
                     </div>
                     <div class="col-md-4">
-                        <span class="badge bg-warning text-dark me-2">Желтый</span> Финальный бой
+                        <span class="badge bg-warning text-dark me-2">Желтый</span> Финальный бой внутри клуба
                     </div>
                 </div>
                 <p class="text-muted mt-2 mb-0">

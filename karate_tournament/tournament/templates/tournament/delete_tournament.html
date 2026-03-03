@@ -1,0 +1,49 @@
+{% extends 'tournament/base.html' %}
+
+{% block title %}Удаление турнира{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    Подтверждение удаления
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                <i class="bi bi-trophy fs-1 text-danger mb-3 d-block"></i>
+                <h3>{{ tournament.name }}</h3>
+                <p class="lead">
+                    Дата проведения: {{ tournament.date }}<br>
+                    Место: {{ tournament.location }}
+                </p>
+                
+                <div class="alert alert-warning">
+                    <h5>Внимание!</h5>
+                    <p class="mb-0">При удалении турнира будут также удалены:</p>
+                    <ul class="text-start mt-2">
+                        <li>Все участники турнира</li>
+                        <li>Все турнирные сетки и матчи</li>
+                        <li>Все результаты поединков</li>
+                    </ul>
+                    <p class="mb-0"><strong>Это действие нельзя будет отменить!</strong></p>
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'index' %}" class="btn btn-secondary btn-lg me-md-2">
+                            <i class="bi bi-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-trash"></i> Удалить турнир
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

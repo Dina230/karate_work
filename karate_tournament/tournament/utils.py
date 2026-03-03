@@ -156,14 +156,12 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
     participants = distribute_participants_by_club(participants)
 
     # Удаляем старые матчи
-    deleted = Match.objects.filter(
+    Match.objects.filter(
         tournament=tournament,
         age_category=age_category,
         gender=gender,
         weight_category=weight_category
     ).delete()
-
-    print(f"Удалено старых матчей")
 
     num_participants = len(participants)
 
@@ -195,6 +193,9 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
 
     print(f"\nСоздание первого раунда ({num_first_round} матчей):")
 
+    # Словарь для хранения матчей по позициям
+    match_positions = {}
+
     for i in range(num_first_round):
         match = Match(
             tournament=tournament,
@@ -214,6 +215,7 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
 
         match.save()
         first_round_matches.append(match)
+        match_positions[i] = match  # Запоминаем матч по позиции
         match_order += 1
 
         p1 = match.participant1.last_name if match.participant1 else "TBD"
@@ -249,15 +251,15 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
             if i < len(current_round_matches):
                 current_round_matches[i].next_match = match
                 current_round_matches[i].save()
+                print(f"    Матч {current_round_matches[i].id} -> следующий {match.id}")
 
             if i + 1 < len(current_round_matches):
                 current_round_matches[i + 1].next_match = match
                 current_round_matches[i + 1].save()
+                print(f"    Матч {current_round_matches[i + 1].id} -> следующий {match.id}")
 
             next_round_matches.append(match)
             match_order += 1
-
-            print(f"  Матч {i // 2 + 1}: создан")
 
         # Запоминаем полуфиналы
         if round_names[round_num] == "1/2":
@@ -282,13 +284,13 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
             is_third_place_match=True
         )
         third_place_match.save()
-        print(f"  Бой за 3 место создан")
+        print(f"  Бой за 3 место создан (ID: {third_place_match.id})")
 
         # Связываем полуфиналы с боем за 3 место
         for i, semi in enumerate(semi_finals):
             semi.third_place_match = third_place_match
             semi.save()
-            print(f"  Полуфинал {i + 1} связан с боем за 3 место")
+            print(f"  Полуфинал {i + 1} (ID: {semi.id}) связан с боем за 3 место")
 
     total_matches = Match.objects.filter(
         tournament=tournament,
@@ -321,8 +323,10 @@ def get_category_stats(tournament):
                 }
             stats[key]['count'] += 1
             stats[key]['participants'].append(p)
+            # Добавляем клуб в множество (автоматически убирает дубликаты)
             stats[key]['clubs'].add(p.club)
 
+    # Преобразуем set в список для шаблона
     for key in stats:
         stats[key]['clubs'] = list(stats[key]['clubs'])
         stats[key]['unique_clubs'] = len(stats[key]['clubs'])
@@ -357,6 +361,7 @@ def process_excel_file(excel_file, tournament, clear_existing=False):
 
         for index, row in df.iterrows():
             try:
+                # Обработка даты рождения
                 birth_date = row['Дата рождения']
                 if isinstance(birth_date, str):
                     try:
@@ -368,7 +373,12 @@ def process_excel_file(excel_file, tournament, clear_existing=False):
                             birth_date = datetime.strptime(birth_date, '%d.%m.%y').date()
                 elif isinstance(birth_date, pd.Timestamp):
                     birth_date = birth_date.date()
+                elif isinstance(birth_date, (int, float)):
+                    # Если дата в формате Excel (число дней)
+                    from datetime import datetime as dt
+                    birth_date = dt.fromordinal(dt(1900, 1, 1).toordinal() + int(birth_date) - 2).date()
 
+                # Обработка пола
                 gender = str(row['Пол']).upper().strip()
                 if gender in ['М', 'M', 'МУЖ', 'MALE', 'МУЖСКОЙ', 'МУЖЧИНА']:
                     gender = 'M'
@@ -377,14 +387,31 @@ def process_excel_file(excel_file, tournament, clear_existing=False):
                 else:
                     raise ValueError(f'Некорректное значение пола: {row["Пол"]}')
 
+                # ОЧИСТКА НАЗВАНИЯ КЛУБА - убираем лишние пробелы и нормализуем
+                club = str(row['Клуб']).strip()
+                # Убираем множественные пробелы
+                club = ' '.join(club.split())
+                # Убираем лишние кавычки
+                club = club.replace('"', '').replace("'", "")
+                # Приводим к единому формату (убираем пробелы в начале и конце)
+                club = club.strip()
+
+                # Обработка веса
+                weight = row['Вес']
+                if isinstance(weight, (int, float)):
+                    weight = float(weight)
+                else:
+                    weight = float(str(weight).replace(',', '.'))
+
+                # Создаем участника
                 participant = Participant(
                     tournament=tournament,
                     last_name=str(row['Фамилия']).strip(),
                     first_name=str(row['Имя']).strip(),
                     birth_date=birth_date,
                     gender=gender,
-                    weight=float(row['Вес']),
-                    club=str(row['Клуб']).strip(),
+                    weight=weight,
+                    club=club,
                     coach=str(row.get('Тренер', '')).strip() if pd.notna(row.get('Тренер')) else '',
                     source_file=excel_file.name,
                     row_number=index + 2
