@@ -4,28 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Турниры{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/karate-icon.png">
+    <link rel="shortcut icon" href="/static/karate-icon.png">
+
+    <!-- Для ретина-дисплеев (опционально) -->
+    <link rel="apple-touch-icon" href="/static/karate-icon.png">
+
+    <meta name="theme-color" content="#e74c3c">
+
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+
     <style>
-        /* Минималистичный дизайн с изюминкой */
+        /* Минималистичный дизайн */
         body {
             background-color: #fafafa;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #2d3436;
             line-height: 1.6;
-            position: relative;
-        }
-
-        /* ИЗЮМИНКА 1: Тонкая линия сверху */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #e74c3c 0%, #f39c12 50%, #3498db 100%);
-            z-index: 1000;
         }
 
         /* Навигация */
@@ -40,23 +39,6 @@
             font-size: 1.25rem;
             color: #2d3436 !important;
             letter-spacing: -0.01em;
-            position: relative;
-        }
-
-        /* ИЗЮМИНКА 2: Легкое свечение при наведении */
-        .navbar-brand::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: #e74c3c;
-            transition: width 0.3s ease;
-        }
-
-        .navbar-brand:hover::after {
-            width: 100%;
         }
 
         .navbar-brand i {
@@ -70,28 +52,10 @@
             font-size: 0.95rem;
             padding: 0.5rem 1rem !important;
             transition: color 0.2s;
-            position: relative;
         }
 
         .nav-link:hover {
             color: #2d3436 !important;
-        }
-
-        /* ИЗЮМИНКА 3: Подчеркивание активной ссылки */
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 2px;
-            background: #e74c3c;
-            transition: width 0.2s ease;
-        }
-
-        .nav-link:hover::after {
-            width: 80%;
         }
 
         /* Карточки */
@@ -100,34 +64,12 @@
             border-radius: 16px;
             background: white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: box-shadow 0.2s;
             margin-bottom: 1.5rem;
-            position: relative;
-            overflow: hidden;
         }
 
-        /* ИЗЮМИНКА 4: Легкий подъем карточки при наведении */
         .card:hover {
-            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
-            transform: translateY(-2px);
-        }
-
-        /* ИЗЮМИНКА 5: Цветной акцент на карточках */
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(231, 76, 60, 0.02) 0%, rgba(52, 152, 219, 0.02) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        .card:hover::before {
-            opacity: 1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         .card-header {
@@ -142,8 +84,6 @@
 
         .card-body {
             padding: 1.5rem;
-            position: relative;
-            z-index: 1;
         }
 
         /* Кнопки */
@@ -153,77 +93,81 @@
             font-weight: 450;
             font-size: 0.95rem;
             border: 1px solid transparent;
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* ИЗЮМИНКА 6: Эффект пульсации при наведении */
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.3s, height 0.3s;
-        }
-
-        .btn:hover::after {
-            width: 300px;
-            height: 300px;
+            transition: all 0.2s;
         }
 
         .btn-primary {
-            background-color: #2d3436;
-            border-color: #2d3436;
+            background-color: #e74c3c;
+            border-color: #e74c3c;
             color: white;
         }
 
         .btn-primary:hover {
-            background-color: #1e272e;
-            border-color: #1e272e;
-        }
-
-        .btn-success {
-            background-color: #27ae60;
-            border-color: #27ae60;
-        }
-
-        .btn-success:hover {
-            background-color: #229954;
-            border-color: #229954;
+            background-color: #c0392b;
+            border-color: #c0392b;
         }
 
         .btn-outline-primary {
-            border: 1px solid #2d3436;
-            color: #2d3436;
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
             background: transparent;
         }
 
         .btn-outline-primary:hover {
-            background: #2d3436;
+            background: #e74c3c;
             color: white;
+        }
+
+        .btn-outline-secondary {
+            border: 1px solid #e0e0e0;
+            color: #95a5a6;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #f0f0f0;
+            color: #2d3436;
+            border-color: #e0e0e0;
+        }
+
+        .btn-success {
+            background-color: #2ecc71;
+            border-color: #2ecc71;
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .btn-info {
+            background-color: #3498db;
+            border-color: #3498db;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
         }
 
         .btn-sm {
-            padding: 0.25rem 1rem;
+            padding: 0.4rem 1.2rem;
             font-size: 0.85rem;
         }
 
-        /* ИЗЮМИНКА 7: Специальный стиль для кнопки удаления */
-        .btn-outline-danger {
-            border: 1px solid #e74c3c;
-            color: #e74c3c;
-        }
-
-        .btn-outline-danger:hover {
-            background: #e74c3c;
-            color: white;
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        .btn-lg {
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
         }
 
         /* Таблицы */
@@ -238,7 +182,7 @@
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.02em;
-            color: #636e72;
+            color: #7f8c8d;
             padding: 1rem;
         }
 
@@ -252,34 +196,18 @@
             background-color: #fafafa;
         }
 
-        /* ИЗЮМИНКА 8: Плавное появление элементов */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .card, .alert, .list-group-item {
-            animation: fadeIn 0.4s ease-out;
-        }
-
         /* Формы */
         .form-control, .form-select {
             border: 1px solid #e0e0e0;
             border-radius: 30px;
             padding: 0.6rem 1.25rem;
             font-size: 0.95rem;
-            transition: all 0.2s;
+            transition: border-color 0.2s;
         }
 
         .form-control:focus, .form-select:focus {
-            border-color: #2d3436;
-            box-shadow: 0 0 0 3px rgba(45, 52, 54, 0.1);
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
             outline: none;
         }
 
@@ -290,18 +218,10 @@
             margin-bottom: 0.5rem;
         }
 
-        /* ИЗЮМИНКА 9: Необычный чекбокс */
-        .form-check-input {
-            width: 1.2rem;
-            height: 1.2rem;
-            border-radius: 4px;
-            border: 2px solid #e0e0e0;
-            transition: all 0.2s;
-        }
-
-        .form-check-input:checked {
-            background-color: #e74c3c;
-            border-color: #e74c3c;
+        .form-text {
+            color: #95a5a6;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
         }
 
         /* Турнирная сетка */
@@ -309,7 +229,7 @@
             display: flex;
             gap: 2rem;
             overflow-x: auto;
-            padding: 1rem 0.5rem;
+            padding: 1rem 0;
         }
 
         .bracket-round {
@@ -321,7 +241,7 @@
             font-size: 1rem;
             text-transform: uppercase;
             letter-spacing: 0.02em;
-            color: #636e72;
+            color: #7f8c8d;
             margin-bottom: 1.5rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #f0f0f0;
@@ -333,13 +253,11 @@
             padding: 1.25rem;
             margin-bottom: 1rem;
             border: 1px solid #f0f0f0;
-            transition: all 0.2s;
+            transition: border-color 0.2s;
         }
 
-        /* ИЗЮМИНКА 10: Легкая тень при наведении на матч */
         .bracket-match:hover {
-            border-color: #2d3436;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-color: #e74c3c;
         }
 
         .participant-item {
@@ -348,12 +266,11 @@
             background: #fafafa;
             border-radius: 12px;
             font-size: 0.95rem;
-            transition: all 0.2s;
         }
 
         .participant-item.winner {
-            background: #f0f0f0;
-            border-left: 3px solid #27ae60;
+            background: #fef5f5;
+            border-left: 3px solid #e74c3c;
         }
 
         .participant-item .club {
@@ -382,8 +299,8 @@
 
         .alert-success {
             background-color: #e8f5e9;
-            color: #27ae60;
-            border-left-color: #27ae60;
+            color: #2ecc71;
+            border-left-color: #2ecc71;
         }
 
         .alert-info {
@@ -399,7 +316,7 @@
         }
 
         .alert-danger {
-            background-color: #fbe9e7;
+            background-color: #fef5f5;
             color: #e74c3c;
             border-left-color: #e74c3c;
         }
@@ -435,34 +352,50 @@
             background: #fafafa;
         }
 
+        /* Бейджи */
+        .badge {
+            font-weight: 450;
+            padding: 0.4rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+        }
+
+        .badge.bg-primary {
+            background-color: #e74c3c !important;
+        }
+
+        .badge.bg-success {
+            background-color: #2ecc71 !important;
+        }
+
+        .badge.bg-info {
+            background-color: #3498db !important;
+        }
+
+        .badge.bg-warning {
+            background-color: #f39c12 !important;
+            color: white;
+        }
+
+        .badge.bg-secondary {
+            background-color: #f0f0f0 !important;
+            color: #7f8c8d !important;
+        }
+
         /* Футер */
         .footer {
             background: white;
-            padding: 2.5rem 0;
-            margin-top: 5rem;
+            padding: 2rem 0;
+            margin-top: 4rem;
             border-top: 1px solid #f0f0f0;
             color: #95a5a6;
             font-size: 0.9rem;
-            position: relative;
-        }
-
-        /* ИЗЮМИНКА 11: Декоративная линия в футере */
-        .footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(90deg, #e74c3c, #3498db);
-            border-radius: 3px;
         }
 
         /* Заголовки */
         h1, h2, h3, h4, h5, h6 {
             font-weight: 450;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.01em;
             color: #2d3436;
         }
 
@@ -476,37 +409,27 @@
             font-weight: 400;
         }
 
-        /* ИЗЮМИНКА 12: Стиль для первого заголовка */
-        h1:first-of-type {
-            position: relative;
-            display: inline-block;
+        /* Прогресс-бары */
+        .progress {
+            height: 6px;
+            border-radius: 3px;
+            background-color: #f0f0f0;
         }
 
-        h1:first-of-type::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, #e74c3c, #f39c12);
+        .progress-bar {
             border-radius: 3px;
         }
 
-        /* Бейджи */
-        .badge {
-            font-weight: 450;
-            padding: 0.4rem 1rem;
-            border-radius: 30px;
-            font-size: 0.85rem;
+        .progress-bar.bg-primary {
+            background-color: #e74c3c !important;
         }
 
-        .badge.bg-primary {
-            background-color: #2d3436 !important;
+        .progress-bar.bg-success {
+            background-color: #2ecc71 !important;
         }
 
-        .badge.bg-success {
-            background-color: #27ae60 !important;
+        .progress-bar.bg-info {
+            background-color: #3498db !important;
         }
 
         /* Список групп */
@@ -517,13 +440,13 @@
             padding: 1.25rem;
         }
 
-        /* ИЗЮМИНКА 13: Специальный стиль для пустых состояний */
+        /* Пустое состояние */
         .empty-state {
-            padding: 3rem;
             text-align: center;
-            background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+            padding: 4rem 2rem;
+            background: white;
             border-radius: 16px;
-            border: 2px dashed #e0e0e0;
+            border: 2px dashed #f0f0f0;
         }
 
         .empty-state i {
@@ -542,14 +465,34 @@
                 font-size: 2rem;
             }
 
-            h1:first-of-type::after {
-                width: 40px;
+            .btn-lg {
+                padding: 0.6rem 1.5rem;
+            }
+
+            .card-header {
+                padding: 1rem 1.25rem;
+            }
+
+            .card-body {
+                padding: 1.25rem;
             }
         }
 
         /* Утилиты */
         .text-muted {
             color: #95a5a6 !important;
+        }
+
+        .text-primary {
+            color: #e74c3c !important;
+        }
+
+        .text-success {
+            color: #2ecc71 !important;
+        }
+
+        .text-info {
+            color: #3498db !important;
         }
 
         .bg-light {
@@ -561,46 +504,15 @@
             opacity: 1;
         }
 
-        /* ИЗЮМИНКА 14: Плавная прокрутка */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* ИЗЮМИНКА 15: Выделение текста */
-        ::selection {
-            background: #e74c3c;
-            color: white;
-        }
-
-        /* ИЗЮМИНКА 16: Стиль для ссылок */
+        /* Ссылки */
         a {
-            color: #2d3436;
+            color: #e74c3c;
             text-decoration: none;
             transition: color 0.2s;
         }
 
         a:hover {
-            color: #e74c3c;
-        }
-
-        /* ИЗЮМИНКА 17: Стиль для иконок */
-        .bi {
-            transition: transform 0.2s;
-        }
-
-        .btn:hover .bi {
-            transform: scale(1.1);
-        }
-
-        /* ИЗЮМИНКА 18: Стиль для счетчиков */
-        .counter-badge {
-            background: #2d3436;
-            color: white;
-            padding: 0.2rem 0.8rem;
-            border-radius: 30px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-left: 0.5rem;
+            color: #c0392b;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -610,7 +522,7 @@
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="{% url 'index' %}">
-                <i class="bi bi-trophy"></i> Школа Каратэ РТ
+                <i class="bi bi-trophy"></i> Школа Карате РТ
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -645,10 +557,10 @@
     <footer class="footer">
         <div class="container text-center">
             <p class="mb-0">
-                © 2026 Школа Каратэ Республики Татарстан»
+                © 2026 Школа Карате Республики Татарстан
             </p>
             <p class="mb-0 small text-muted mt-2">
-                г.Альметьевск
+                г. Альметьевск
             </p>
         </div>
     </footer>

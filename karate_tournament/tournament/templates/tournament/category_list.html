@@ -8,7 +8,7 @@
         <!-- Заголовок -->
         <div class="d-flex justify-content-between align-items-center mb-5">
             <div>
-                <h1 class="fw-400 ">Категории</h1>
+                <h1 class="fw-400">Категории</h1>
                 <p class="text-secondary" style="color: #7f8c8d !important;">{{ tournament.name }}</p>
             </div>
             <div class="d-flex gap-2">
@@ -27,9 +27,71 @@
             </div>
         </div>
 
-        <!-- Список категорий -->
+        <!-- Фильтры -->
+        <div class="card mb-4" style="border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <div class="card-body p-4">
+                <form method="get" class="row g-3" id="filterForm">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Возрастная категория</label>
+                        <select name="age" class="form-select" onchange="this.form.submit()">
+                            <option value="">Все возраста</option>
+                            {% for age in age_filters %}
+                            <option value="{{ age }}" {% if selected_age == age %}selected{% endif %}>
+                                {{ age }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Весовая категория</label>
+                        <select name="weight" class="form-select" onchange="this.form.submit()">
+                            <option value="">Все веса</option>
+                            {% for weight in weight_filters %}
+                            <option value="{{ weight }}" {% if selected_weight == weight %}selected{% endif %}>
+                                {{ weight }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Пол</label>
+                        <select name="gender" class="form-select" onchange="this.form.submit()">
+                            <option value="">Все</option>
+                            <option value="M" {% if selected_gender == 'M' %}selected{% endif %}>Мужчины</option>
+                            <option value="F" {% if selected_gender == 'F' %}selected{% endif %}>Женщины</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Статус</label>
+                        <select name="status" class="form-select" onchange="this.form.submit()">
+                            <option value="">Все</option>
+                            <option value="ready" {% if selected_status == 'ready' %}selected{% endif %}>Готовы к турниру</option>
+                            <option value="not_ready" {% if selected_status == 'not_ready' %}selected{% endif %}>Мало участников</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{% url 'category_list' tournament.id %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-eraser"></i> Сбросить
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Результаты фильтрации -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <p class="text-muted small mb-0">
+                Найдено категорий: <strong>{{ page_obj.paginator.count }}</strong>
+            </p>
+        </div>
+
+        <!-- Список категорий с пагинацией -->
         <div class="row g-4">
-            {% for key, data in stats.items %}
+            {% for key, data in page_obj %}
             <div class="col-lg-4 col-md-6">
                 <div class="card h-100" style="border: none; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                     <div class="card-header" style="background: white; border-bottom: 1px solid #ecf0f1; padding: 1.25rem 1.5rem; border-radius: 16px 16px 0 0 !important;">
@@ -73,10 +135,20 @@
                         <hr style="border-color: #ecf0f1; margin: 1.5rem 0;">
 
                         {% if data.count >= 2 %}
-                        <a href="{% url 'category_bracket' tournament.id data.age_category data.gender_code data.weight_category %}"
-                           class="btn w-100" style="border: 1px solid #e74c3c; color: #e74c3c; border-radius: 30px; padding: 0.5rem 1.25rem; transition: all 0.2s;">
-                            <i class="bi bi-bracket"></i> Просмотр сетки
-                        </a>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'category_bracket' tournament.id data.age_category data.gender_code data.weight_category %}"
+                               class="btn btn-outline-primary w-100" style="border: 1px solid #e74c3c; color: #e74c3c; border-radius: 30px; padding: 0.5rem 1.25rem; transition: all 0.2s;">
+                                <i class="bi bi-bracket"></i> Просмотр сетки
+                            </a>
+
+                            <!-- Кнопка для генерации сетки конкретной категории -->
+                            <form method="post" action="{% url 'generate_bracket_for_category' tournament.id data.age_category data.gender_code data.weight_category %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-success w-100" style="border: 1px solid #2ecc71; color: #2ecc71; border-radius: 30px; padding: 0.5rem 1.25rem; transition: all 0.2s;">
+                                    <i class="bi bi-lightning-charge"></i> Сгенерировать сетку
+                                </button>
+                            </form>
+                        </div>
                         {% else %}
                         <button class="btn w-100" style="border: 1px solid #bdc3c7; color: #95a5a6; border-radius: 30px; padding: 0.5rem 1.25rem;" disabled>
                             <i class="bi bi-exclamation-triangle"></i> Мало участников ({{ data.count }})
@@ -100,10 +172,69 @@
             {% endfor %}
         </div>
 
+        <!-- Пагинация -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="d-flex justify-content-center mt-5">
+            <nav aria-label="Навигация по категориям">
+                <ul class="pagination" style="gap: 5px;">
+                    <!-- Первая страница -->
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" style="border: none; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem; transition: all 0.2s;" aria-label="Первая">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <!-- Предыдущая страница -->
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" style="border: none; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem; transition: all 0.2s;" aria-label="Предыдущая">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Номера страниц -->
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link" style="border: none; border-radius: 30px; background-color: #e74c3c; color: white; padding: 0.5rem 1rem;">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" style="border: none; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem;">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Следующая страница -->
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" style="border: none; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem; transition: all 0.2s;" aria-label="Следующая">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <!-- Последняя страница -->
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" style="border: none; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem; transition: all 0.2s;" aria-label="Последняя">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Информация о количестве записей -->
+        <div class="text-center mt-3">
+            <small style="color: #95a5a6;">
+                Показано {{ page_obj.start_index }} - {{ page_obj.end_index }} из {{ page_obj.paginator.count }} категорий
+            </small>
+        </div>
+        {% endif %}
+
         <!-- Краткая сводка -->
-        {% if stats %}
+        {% if total_categories > 0 %}
         <div class="mt-5 pt-3 text-center">
-            <span class="mx-2" style="color: #7f8c8d;">Всего категорий: <span style="color: #e74c3c;">{{ stats|length }}</span></span>
+            <span class="mx-2" style="color: #7f8c8d;">Всего категорий: <span style="color: #e74c3c;">{{ total_categories }}</span></span>
             <span class="mx-2" style="color: #bdc3c7;">·</span>
             <span class="mx-2" style="color: #7f8c8d;">Всего участников: <span style="color: #3498db;">{{ total_participants }}</span></span>
             <span class="mx-2" style="color: #bdc3c7;">·</span>
@@ -113,39 +244,142 @@
     </div>
 </div>
 
+<!-- Дополнительные стили -->
 <style>
-/* Дополнительные стили для hover-эффектов */
+/* Стили для фильтров */
+.form-select {
+    border: 2px solid #ecf0f1;
+    border-radius: 30px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.form-select:focus {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1);
+    outline: none;
+}
+
+.form-select:hover {
+    border-color: #bdc3c7;
+}
+
+/* Стили для кнопок фильтров */
+.btn-outline-secondary {
+    border: 2px solid #ecf0f1;
+    color: #7f8c8d;
+    border-radius: 30px;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #ecf0f1;
+    border-color: #bdc3c7;
+    color: #2c3e50;
+    transform: translateY(-2px);
+}
+
+/* Стили для кнопок в карточках */
 .btn-outline-primary:hover {
-    background-color: #3498db !important;
-    border-color: #3498db !important;
-    color: white !important;
-}
-
-.btn-outline-info:hover {
-    background-color: #2ecc71 !important;
-    border-color: #2ecc71 !important;
-    color: white !important;
-}
-
-.btn-primary:hover {
-    background-color: #c0392b !important;
-    border-color: #c0392b !important;
-}
-
-.card .btn:hover {
     background-color: #e74c3c !important;
     color: white !important;
     border-color: #e74c3c !important;
+    transform: translateY(-2px);
 }
 
-/* Плавные переходы */
-.btn, .card {
+.btn-outline-success:hover {
+    background-color: #2ecc71 !important;
+    color: white !important;
+    border-color: #2ecc71 !important;
+    transform: translateY(-2px);
+}
+
+/* Стили для пагинации */
+.page-link {
+    border: none;
+    border-radius: 30px;
+    color: #7f8c8d;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+}
+
+.page-link:hover {
+    background-color: #fee7e5 !important;
+    color: #e74c3c !important;
+    transform: scale(1.05);
+}
+
+.page-item.active .page-link {
+    background-color: #e74c3c !important;
+    color: white !important;
+}
+
+/* Стили для карточек */
+.card {
     transition: all 0.3s ease;
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(231, 76, 60, 0.15) !important;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(231, 76, 60, 0.15) !important;
+}
+
+/* Бейджи */
+.badge {
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .form-select {
+        font-size: 0.9rem;
+        padding: 0.4rem 1rem;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
 }
 </style>
+
+<script>
+// Сохранение параметров фильтрации при пагинации
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filterForm');
+    const pageLinks = document.querySelectorAll('.page-link');
+
+    pageLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const url = new URL(this.href, window.location.origin);
+            const params = new URLSearchParams(url.search);
+
+            // Добавляем текущие фильтры к ссылке пагинации
+            {% if selected_age %}
+            if (!params.has('age')) params.set('age', '{{ selected_age }}');
+            {% endif %}
+            {% if selected_weight %}
+            if (!params.has('weight')) params.set('weight', '{{ selected_weight }}');
+            {% endif %}
+            {% if selected_gender %}
+            if (!params.has('gender')) params.set('gender', '{{ selected_gender }}');
+            {% endif %}
+            {% if selected_status %}
+            if (!params.has('status')) params.set('status', '{{ selected_status }}');
+            {% endif %}
+
+            this.href = url.pathname + '?' + params.toString();
+        });
+    });
+});
+</script>
 {% endblock %}

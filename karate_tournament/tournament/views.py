@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q, Max
 from django.http import JsonResponse, HttpResponse
+from django.core.paginator import Paginator
 from datetime import date
 import pandas as pd
 
@@ -97,7 +98,7 @@ def register_participant(request, tournament_id):
 
 
 def participant_list(request, tournament_id):
-    """Список всех участников турнира"""
+    """Список всех участников турнира с пагинацией"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
     participants = Participant.objects.filter(tournament=tournament)
 
@@ -105,6 +106,7 @@ def participant_list(request, tournament_id):
     age_filter = request.GET.get('age')
     gender_filter = request.GET.get('gender')
     weight_filter = request.GET.get('weight')
+    search_query = request.GET.get('search')
 
     if age_filter:
         participants = participants.filter(age_category=age_filter)
@@ -112,10 +114,28 @@ def participant_list(request, tournament_id):
         participants = participants.filter(gender=gender_filter)
     if weight_filter:
         participants = participants.filter(weight_category=weight_filter)
+    if search_query:
+        participants = participants.filter(
+            Q(last_name__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(club__icontains=search_query)
+        )
+
+    # Сортировка
+    participants = participants.order_by('last_name', 'first_name')
 
     # Уникальные значения для фильтров
-    age_categories = participants.values_list('age_category', flat=True).distinct().order_by('age_category')
-    weight_categories = participants.values_list('weight_category', flat=True).distinct().order_by('weight_category')
+    age_categories = Participant.objects.filter(tournament=tournament).values_list('age_category',
+                                                                                   flat=True).distinct().order_by(
+        'age_category')
+    weight_categories = Participant.objects.filter(tournament=tournament).values_list('weight_category',
+                                                                                      flat=True).distinct().order_by(
+        'weight_category')
+
+    # Пагинация (20 участников на страницу)
+    paginator = Paginator(participants, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     # Подсчет участников из Excel
     excel_count = participants.filter(source_file__isnull=False).count()
@@ -123,12 +143,14 @@ def participant_list(request, tournament_id):
 
     context = {
         'tournament': tournament,
-        'participants': participants,
+        'page_obj': page_obj,
+        'participants': page_obj.object_list,
         'age_categories': age_categories,
         'weight_categories': weight_categories,
         'selected_age': age_filter,
         'selected_gender': gender_filter,
         'selected_weight': weight_filter,
+        'search_query': search_query,
         'excel_count': excel_count,
         'manual_count': manual_count,
     }
@@ -136,13 +158,73 @@ def participant_list(request, tournament_id):
 
 
 def category_list(request, tournament_id):
-    """Список всех категорий с количеством участников"""
+    """Список всех категорий с количеством участников, фильтрацией и пагинацией"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
-    stats = get_category_stats(tournament)
+
+    # Получаем все категории
+    all_stats = get_category_stats(tournament)
+
+    # Фильтры
+    age_filter = request.GET.get('age')
+    weight_filter = request.GET.get('weight')
+    gender_filter = request.GET.get('gender')
+    status_filter = request.GET.get('status')
+
+    # Фильтруем категории
+    filtered_stats = {}
+    for key, data in all_stats.items():
+        include = True
+
+        if age_filter and data['age_category'] != age_filter:
+            include = False
+        if weight_filter and data['weight_category'] != weight_filter:
+            include = False
+        if gender_filter and data['gender_code'] != gender_filter:
+            include = False
+        if status_filter == 'ready' and data['count'] < 2:
+            include = False
+        if status_filter == 'not_ready' and data['count'] >= 2:
+            include = False
+
+        if include:
+            filtered_stats[key] = data
+
+    # Подсчет общего количества участников и клубов
+    participants = Participant.objects.filter(tournament=tournament)
+    total_participants = participants.count()
+    total_clubs = participants.values('club').distinct().count()
+    total_categories = len(filtered_stats)
+
+    # Уникальные значения для фильтров
+    age_filters = set()
+    weight_filters = set()
+    for data in all_stats.values():
+        age_filters.add(data['age_category'])
+        weight_filters.add(data['weight_category'])
+
+    age_filters = sorted(list(age_filters))
+    weight_filters = sorted(list(weight_filters))
+
+    # Преобразуем stats в список для пагинации
+    stats_items = list(filtered_stats.items())
+
+    # Пагинация (9 категорий на страницу - 3 ряда по 3 колонки)
+    paginator = Paginator(stats_items, 9)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'tournament': tournament,
-        'stats': stats,
+        'page_obj': page_obj,
+        'total_categories': total_categories,
+        'total_participants': total_participants,
+        'total_clubs': total_clubs,
+        'age_filters': age_filters,
+        'weight_filters': weight_filters,
+        'selected_age': age_filter,
+        'selected_weight': weight_filter,
+        'selected_gender': gender_filter,
+        'selected_status': status_filter,
     }
     return render(request, 'tournament/category_list.html', context)
 

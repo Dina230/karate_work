@@ -1,6 +1,6 @@
 {% extends 'tournament/base.html' %}
 
-{% block title %}Главная - Турнир по каратэ{% endblock %}
+{% block title %}Главная - Турнир по карате{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -9,12 +9,7 @@
         <div class="d-flex justify-content-between align-items-center mb-5">
             <div class="position-relative">
                 <h1 class="fw-400 mb-0">Турниры</h1>
-                <!-- ИЗЮМИНКА: Маленький индикатор количества -->
-                {% if tournaments.count > 0 %}
-                <span class="counter-badge position-absolute top-0 start-100 translate-middle">
-                    {{ tournaments.count }}
-                </span>
-                {% endif %}
+
             </div>
             <a href="{% url 'add_tournament' %}" class="btn btn-primary">
                 <i class="bi bi-plus-lg"></i> Создать турнир

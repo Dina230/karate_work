@@ -5,175 +5,298 @@
 {% block content %}
 <div class="row">
     <div class="col-md-8 offset-md-2">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">
-                    <i class="bi bi-trophy"></i> 
-                    Создание нового турнира
-                </h4>
-            </div>
-            <div class="card-body">
-                <form method="post" class="needs-validation" novalidate>
+        <!-- Заголовок -->
+        <div class="text-center mb-5">
+            <h1 class="fw-400 mb-2" style="color: #2c3e50;">Создание турнира</h1>
+            <p class="text-muted">Заполните форму для создания нового турнира</p>
+        </div>
+
+        <!-- Основная форма -->
+        <div class="card" style="border: none; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+            <div class="card-body p-5">
+                <form method="post">
                     {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.name.id_for_label }}" class="form-label fw-bold">
+
+                    <!-- Название турнира -->
+                    <div class="mb-4">
+                        <label for="{{ form.name.id_for_label }}" class="form-label fw-500 mb-2" style="color: #2c3e50;">
+                            <i class="bi bi-trophy me-2" style="color: #e74c3c;"></i>
                             {{ form.name.label }}
                         </label>
                         {{ form.name }}
                         {% if form.name.help_text %}
-                        <div class="form-text">{{ form.name.help_text }}</div>
+                        <div class="form-text mt-2">{{ form.name.help_text }}</div>
                         {% endif %}
                         {% if form.name.errors %}
-                        <div class="text-danger">{{ form.name.errors }}</div>
+                        <div class="text-danger mt-2">{{ form.name.errors }}</div>
                         {% endif %}
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.date.id_for_label }}" class="form-label fw-bold">
+                    <!-- Даты -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.date.id_for_label }}" class="form-label fw-500 mb-2" style="color: #2c3e50;">
+                                <i class="bi bi-calendar-event me-2" style="color: #3498db;"></i>
                                 {{ form.date.label }}
                             </label>
                             {{ form.date }}
                             {% if form.date.errors %}
-                            <div class="text-danger">{{ form.date.errors }}</div>
+                            <div class="text-danger mt-2">{{ form.date.errors }}</div>
                             {% endif %}
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.registration_deadline.id_for_label }}" class="form-label fw-bold">
+                        <div class="col-md-6">
+                            <label for="{{ form.registration_deadline.id_for_label }}" class="form-label fw-500 mb-2" style="color: #2c3e50;">
+                                <i class="bi bi-clock me-2" style="color: #f39c12;"></i>
                                 {{ form.registration_deadline.label }}
                             </label>
                             {{ form.registration_deadline }}
                             {% if form.registration_deadline.help_text %}
-                            <div class="form-text">{{ form.registration_deadline.help_text }}</div>
+                            <div class="form-text mt-2">{{ form.registration_deadline.help_text }}</div>
                             {% endif %}
                             {% if form.registration_deadline.errors %}
-                            <div class="text-danger">{{ form.registration_deadline.errors }}</div>
+                            <div class="text-danger mt-2">{{ form.registration_deadline.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="{{ form.location.id_for_label }}" class="form-label fw-bold">
+                    <!-- Место проведения -->
+                    <div class="mb-4">
+                        <label for="{{ form.location.id_for_label }}" class="form-label fw-500 mb-2" style="color: #2c3e50;">
+                            <i class="bi bi-geo-alt me-2" style="color: #2ecc71;"></i>
                             {{ form.location.label }}
                         </label>
                         {{ form.location }}
                         {% if form.location.errors %}
-                        <div class="text-danger">{{ form.location.errors }}</div>
+                        <div class="text-danger mt-2">{{ form.location.errors }}</div>
                         {% endif %}
                     </div>
 
-                    <div class="mb-4 form-check">
-                        {{ form.is_active }}
-                        <label class="form-check-label fw-bold" for="{{ form.is_active.id_for_label }}">
-                            {{ form.is_active.label }}
-                        </label>
-                        <div class="form-text">
-                            Активные турниры отображаются на главной странице
+                    <!-- Активный статус -->
+                    <div class="mb-5 p-4" style="background: #f8f9fa; border-radius: 16px;">
+                        <div class="form-check">
+                            {{ form.is_active }}
+                            <label class="form-check-label fw-500" for="{{ form.is_active.id_for_label }}" style="color: #2c3e50;">
+                                {{ form.is_active.label }}
+                            </label>
+                            <div class="form-text mt-2" style="color: #7f8c8d;">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Активные турниры отображаются на главной странице
+                            </div>
                         </div>
                     </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{% url 'index' %}" class="btn btn-secondary me-md-2">
-                            <i class="bi bi-x-circle"></i> Отмена
+                    <!-- Кнопки -->
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="{% url 'index' %}" class="btn btn-outline-secondary px-5"
+                           style="border-radius: 30px; padding: 0.75rem 2rem;">
+                            <i class="bi bi-x-circle me-2"></i>Отмена
                         </a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle"></i> Создать турнир
+                        <button type="submit" class="btn btn-primary px-5"
+                                style="background-color: #e74c3c; border-color: #e74c3c; border-radius: 30px; padding: 0.75rem 2rem;">
+                            <i class="bi bi-check-circle me-2"></i>Создать
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Подсказки -->
-        <div class="card mt-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Информация</h5>
+        <!-- Информационные карточки -->
+        <div class="row g-4 mt-4">
+            <div class="col-md-6">
+                <div class="card h-100" style="border: none; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div style="width: 40px; height: 40px; background: #e8f5e9; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="bi bi-info-circle" style="color: #2ecc71;"></i>
+                            </div>
+                            <h5 class="mb-0 fw-500" style="color: #2c3e50;">Информация</h5>
+                        </div>
+                        <p style="color: #7f8c8d; line-height: 1.6;">
+                            После создания турнира вы сможете зарегистрировать участников,
+                            создать турнирные сетки и отслеживать результаты поединков.
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <h6>После создания турнира вы сможете:</h6>
-                <ul>
-                    <li>Зарегистрировать участников вручную</li>
-                    <li>Загрузить участников из Excel файла</li>
-                    <li>Создать турнирные сетки</li>
-                    <li>Отслеживать результаты поединков</li>
-                </ul>
-                <p class="text-muted mb-0">
-                    <i class="bi bi-calendar"></i> 
-                    Дедлайн регистрации - дата, до которой принимаются заявки на участие
-                </p>
+
+            <div class="col-md-6">
+                <div class="card h-100" style="border: none; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div style="width: 40px; height: 40px; background: #fef5f5; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="bi bi-calendar" style="color: #e74c3c;"></i>
+                            </div>
+                            <h5 class="mb-0 fw-500" style="color: #2c3e50;">Дедлайн</h5>
+                        </div>
+                        <p style="color: #7f8c8d; line-height: 1.6;">
+                            Дедлайн регистрации - дата, до которой принимаются заявки на участие.
+                            После этой даты регистрация будет закрыта.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Пример заполнения -->
-        <div class="card mt-4">
-            <div class="card-header bg-warning">
-                <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Пример заполнения</h5>
+        <div class="card mt-4" style="border: none; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <div style="width: 40px; height: 40px; background: #fff3e0; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                        <i class="bi bi-pencil-square" style="color: #f39c12;"></i>
+                    </div>
+                    <h5 class="mb-0 fw-500" style="color: #2c3e50;">Пример заполнения</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table" style="margin-bottom: 0;">
+                        <tbody>
+                            <tr>
+                                <td style="width: 200px; color: #7f8c8d; border: none;">Название турнира</td>
+                                <td style="color: #2c3e50; border: none;">VII ЧЕМПИОНАТ РЕСПУБЛИКИ ТАТАРСТАН</td>
+                            </tr>
+                            <tr>
+                                <td style="color: #7f8c8d; border: none;">Дата проведения</td>
+                                <td style="color: #2c3e50; border: none;">15.03.2026</td>
+                            </tr>
+                            <tr>
+                                <td style="color: #7f8c8d; border: none;">Дедлайн регистрации</td>
+                                <td style="color: #2c3e50; border: none;">25.02.2026</td>
+                            </tr>
+                            <tr>
+                                <td style="color: #7f8c8d; border: none;">Место проведения</td>
+                                <td style="color: #2c3e50; border: none;">г.Альметьевск, пр-кт Строителей, д. 9А</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <tr>
-                        <th>Поле</th>
-                        <th>Пример</th>
-                    </tr>
-                    <tr>
-                        <td>Название турнира</td>
-                        <td>VII ЧЕМПИОНАТ РЕСПУБЛИКИ ТАТАРСТАН</td>
-                    </tr>
-                    <tr>
-                        <td>Дата проведения</td>
-                        <td>15.03.2026</td>
-                    </tr>
-                    <tr>
-                        <td>Дедлайн регистрации</td>
-                        <td>25.02.2026</td>
-                    </tr>
-                    <tr>
-                        <td>Место проведения</td>
-                        <td>г.Казань, пр-кт Ибрагимова, д.44 Спортивный Комплекс «Батыр»</td>
-                    </tr>
-                </table>
-            </div>
+        </div>
+
+        <!-- Дополнительная информация -->
+        <div class="text-center mt-5">
+            <p class="small text-muted">
+                <i class="bi bi-shield-check me-1"></i>
+                Все данные защищены и используются только для организации турнира
+            </p>
         </div>
     </div>
 </div>
 
 <style>
+/* Стили для форм */
 .form-control, .form-select {
-    border-radius: 10px;
-    padding: 10px 15px;
-    border: 2px solid #e0e0e0;
-    transition: all 0.3s;
+    border: 2px solid #ecf0f1;
+    border-radius: 16px;
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
 }
 
 .form-control:focus, .form-select:focus {
-    border-color: #28a745;
-    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1);
+    background-color: white;
 }
 
-.btn {
-    border-radius: 25px;
-    padding: 10px 25px;
+.form-control:hover, .form-select:hover {
+    border-color: #bdc3c7;
 }
 
+.form-label {
+    font-size: 0.95rem;
+    color: #34495e;
+}
+
+.form-text {
+    color: #95a5a6;
+    font-size: 0.85rem;
+}
+
+/* Чекбокс */
+.form-check-input {
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-top: 0.15rem;
+    border: 2px solid #ecf0f1;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1);
+    border-color: #e74c3c;
+}
+
+/* Карточки */
 .card {
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.alert {
-    border-radius: 10px;
-    border: none;
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1) !important;
 }
 
-.table {
-    margin-bottom: 0;
+/* Кнопки */
+.btn {
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
-.table th {
-    background-color: #f8f9fa;
+.btn-outline-secondary {
+    border: 2px solid #ecf0f1;
+    color: #7f8c8d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #ecf0f1;
+    border-color: #ecf0f1;
+    color: #2c3e50;
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background-color: #e74c3c;
+    border: 2px solid #e74c3c;
+}
+
+.btn-primary:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+/* Таблица */
+.table td {
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+
+    .btn {
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+
+    .d-flex.gap-3 {
+        flex-direction: column;
+    }
 }
 </style>
 {% endblock %}
