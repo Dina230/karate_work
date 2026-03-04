@@ -164,11 +164,34 @@ def category_list(request, tournament_id):
     # Получаем все категории
     all_stats = get_category_stats(tournament)
 
+    # Добавляем информацию о матчах в stats
+    from django.db.models import Count, Q
+    for key, data in all_stats.items():
+        age = data['age_category']
+        gender = data['gender_code']
+        weight = data['weight_category']
+
+        # Получаем матчи для этой категории
+        matches = Match.objects.filter(
+            tournament=tournament,
+            age_category=age,
+            gender=gender,
+            weight_category=weight
+        )
+
+        # Считаем статистику по матчам
+        data['total_matches'] = matches.count()
+        data['completed_matches'] = matches.filter(status='completed').count()
+        data['pending_matches'] = matches.filter(status__in=['scheduled', 'in_progress']).count()
+        data['has_matches'] = data['total_matches'] > 0
+        data['all_matches_completed'] = data['total_matches'] > 0 and data['completed_matches'] == data['total_matches']
+
     # Фильтры
     age_filter = request.GET.get('age')
     weight_filter = request.GET.get('weight')
     gender_filter = request.GET.get('gender')
-    status_filter = request.GET.get('status')
+    status_filter = request.GET.get('status')  # статус участников (ready/not_ready)
+    match_status_filter = request.GET.get('match_status')  # статус матчей (completed/not_completed)
 
     # Фильтруем категории
     filtered_stats = {}
@@ -184,6 +207,12 @@ def category_list(request, tournament_id):
         if status_filter == 'ready' and data['count'] < 2:
             include = False
         if status_filter == 'not_ready' and data['count'] >= 2:
+            include = False
+
+        # Фильтр по статусу матчей
+        if match_status_filter == 'completed' and not data.get('all_matches_completed', False):
+            include = False
+        if match_status_filter == 'not_completed' and data.get('all_matches_completed', False):
             include = False
 
         if include:
@@ -225,6 +254,7 @@ def category_list(request, tournament_id):
         'selected_weight': weight_filter,
         'selected_gender': gender_filter,
         'selected_status': status_filter,
+        'selected_match_status': match_status_filter,
     }
     return render(request, 'tournament/category_list.html', context)
 

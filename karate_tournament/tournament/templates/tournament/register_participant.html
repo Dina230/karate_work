@@ -4,245 +4,282 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">
-                    <i class="bi bi-person-plus"></i> 
-                    Регистрация нового участника
-                </h4>
+    <div class="col-lg-10 offset-lg-1">
+        <!-- Заголовок -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-400" style="color: #2c3e50; border-left: 4px solid #e74c3c; padding-left: 1rem;">Регистрация участника</h1>
+                <p class="text-secondary mt-2" style="color: #7f8c8d !important;">
+                    <i class="bi bi-calendar-event me-1" style="color: #3498db;"></i>
+                    {{ tournament.name }} | {{ tournament.date }}
+                </p>
             </div>
-            <div class="card-body">
-                <div class="alert alert-info mb-4">
-                    <h5><i class="bi bi-info-circle"></i> Турнир: {{ tournament.name }}</h5>
-                    <p class="mb-0">Дата проведения: {{ tournament.date }}</p>
-                </div>
+        </div>
 
-                <form method="post" class="needs-validation" novalidate>
+        <!-- Основная форма -->
+        <div class="card mb-4" style="border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
+            <div class="card-header" style="background: white; border-bottom: 1px solid #ecf0f1; padding: 1.25rem 1.5rem; border-radius: 16px 16px 0 0 !important;">
+                <h5 class="mb-0 fw-500">
+                    <i class="bi bi-person-plus me-2" style="color: #e74c3c;"></i>
+                    Заполните данные участника
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
                     {% csrf_token %}
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.last_name.id_for_label }}" class="form-label fw-bold">
+
+                    <!-- Фамилия и Имя -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
+                                <i class="bi bi-person me-1" style="color: #3498db;"></i>
                                 {{ form.last_name.label }}
                             </label>
                             {{ form.last_name }}
                             {% if form.last_name.errors %}
-                            <div class="text-danger">{{ form.last_name.errors }}</div>
+                            <div class="text-danger small mt-2">{{ form.last_name.errors }}</div>
                             {% endif %}
                         </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.first_name.id_for_label }}" class="form-label fw-bold">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
+                                <i class="bi bi-person me-1" style="color: #3498db;"></i>
                                 {{ form.first_name.label }}
                             </label>
                             {{ form.first_name }}
                             {% if form.first_name.errors %}
-                            <div class="text-danger">{{ form.first_name.errors }}</div>
+                            <div class="text-danger small mt-2">{{ form.first_name.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.birth_date.id_for_label }}" class="form-label fw-bold">
+                    <!-- Дата рождения и Пол -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
+                                <i class="bi bi-calendar me-1" style="color: #f39c12;"></i>
                                 {{ form.birth_date.label }}
                             </label>
                             {{ form.birth_date }}
                             {% if form.birth_date.errors %}
-                            <div class="text-danger">{{ form.birth_date.errors }}</div>
+                            <div class="text-danger small mt-2">{{ form.birth_date.errors }}</div>
                             {% endif %}
-                            <div class="form-text">Возраст определится автоматически</div>
+                            <div class="form-text small mt-2">
+                                <i class="bi bi-info-circle me-1" style="color: #7f8c8d;"></i>
+                                Возраст определится автоматически
+                            </div>
                         </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.gender.id_for_label }}" class="form-label fw-bold">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
+                                <i class="bi bi-gender-ambiguous me-1" style="color: #9b59b6;"></i>
                                 {{ form.gender.label }}
                             </label>
                             {{ form.gender }}
                             {% if form.gender.errors %}
-                            <div class="text-danger">{{ form.gender.errors }}</div>
+                            <div class="text-danger small mt-2">{{ form.gender.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.weight.id_for_label }}" class="form-label fw-bold">
+                    <!-- Вес и Клуб -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
+                                <i class="bi bi-speedometer2 me-1" style="color: #e74c3c;"></i>
                                 {{ form.weight.label }} (кг)
                             </label>
                             {{ form.weight }}
                             {% if form.weight.errors %}
-                            <div class="text-danger">{{ form.weight.errors }}</div>
+                            <div class="text-danger small mt-2">{{ form.weight.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
+                                <i class="bi bi-building me-1" style="color: #27ae60;"></i>
+                                {{ form.club.label }}
+                            </label>
+                            {{ form.club }}
+                            {% if form.club.errors %}
+                            <div class="text-danger small mt-2">{{ form.club.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="{{ form.club.id_for_label }}" class="form-label fw-bold">
-                            {{ form.club.label }}
-                        </label>
-                        {{ form.club }}
-                        {% if form.club.errors %}
-                        <div class="text-danger">{{ form.club.errors }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="{{ form.coach.id_for_label }}" class="form-label fw-bold">
+                    <!-- Тренер (необязательно) -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
+                            <i class="bi bi-person-badge me-1" style="color: #f39c12;"></i>
                             {{ form.coach.label }}
                         </label>
                         {{ form.coach }}
                         {% if form.coach.errors %}
-                        <div class="text-danger">{{ form.coach.errors }}</div>
+                        <div class="text-danger small mt-2">{{ form.coach.errors }}</div>
                         {% endif %}
-                        <div class="form-text">Необязательное поле</div>
+                        <div class="form-text small mt-2">
+                            <i class="bi bi-info-circle me-1" style="color: #7f8c8d;"></i>
+                            Необязательное поле
+                        </div>
                     </div>
 
-                    <div class="alert alert-warning mt-3">
-                        <h6><i class="bi bi-exclamation-triangle"></i> Важная информация:</h6>
-                        <ul class="mb-0">
-                            <li>Категория участника определится автоматически на основе возраста и веса</li>
-                            <li>Участник может выступать только в одной весовой категории</li>
-                            <li>Необходимо будет предоставить документы на мандатной комиссии</li>
-                        </ul>
+                    <!-- Важная информация -->
+                    <div class="alert mb-4" style="background: linear-gradient(135deg, #fff3e0, #ffe9cc); border: none; border-radius: 12px;">
+                        <div class="d-flex">
+                            <div style="width: 40px; height: 40px; background: #f39c12; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="bi bi-exclamation-triangle-fill text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-500 mb-2" style="color: #e67e22;">Важная информация</h6>
+                                <ul class="small mb-0" style="color: #7f8c8d; padding-left: 1rem;">
+                                    <li>Категория участника определится автоматически на основе возраста и веса</li>
+                                    <li>Участник может выступать только в одной весовой категории</li>
+                                    <li>Необходимо будет предоставить документы на мандатной комиссии</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                        <a href="{% url 'participant_list' tournament.id %}" class="btn btn-secondary me-md-2">
-                            <i class="bi bi-x-circle"></i> Отмена
+                    <!-- Кнопки -->
+                    <div class="d-flex gap-2 justify-content-end mt-5">
+                        <a href="{% url 'participant_list' tournament.id %}" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-circle me-2"></i>Отмена
                         </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Зарегистрировать
+                        <button type="submit" class="btn btn-primary px-4" style="background: linear-gradient(135deg, #e74c3c, #c0392b); border: none;">
+                            <i class="bi bi-check-circle me-2"></i>Зарегистрировать
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Информация о возрастных категориях -->
-        <div class="card mt-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="bi bi-calendar"></i> Возрастные категории</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Возраст</th>
-                                <th>Категория</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>6-7 лет</td><td>Мальчики/Девочки</td></tr>
-                            <tr><td>8-9 лет</td><td>Мальчики/Девочки</td></tr>
-                            <tr><td>10-11 лет</td><td>Мальчики/Девочки</td></tr>
-                            <tr><td>12-13 лет</td><td>Юноши/Девушки</td></tr>
-                            <tr><td>14-15 лет</td><td>Юноши/Девушки</td></tr>
-                            <tr><td>16-17 лет</td><td>Юниоры/Юниорки</td></tr>
-                            <tr><td>18+ лет</td><td>Мужчины/Женщины</td></tr>
-                        </tbody>
-                    </table>
+        <!-- Информация о категориях -->
+        <div class="row g-4">
+            <!-- Возрастные категории -->
+            <div class="col-md-6">
+                <div class="card h-100" style="border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.1); border-left: 3px solid #3498db;">
+                    <div class="card-header" style="background: white; border-bottom: 1px solid #ecf0f1; padding: 1rem 1.25rem;">
+                        <h5 class="mb-0 fw-500" style="color: #2c3e50;">
+                            <i class="bi bi-calendar me-2" style="color: #3498db;"></i>
+                            Возрастные категории
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <tbody>
+                                    <tr><td class="ps-4">6-7 лет</td><td class="text-muted">Мальчики/Девочки</td></tr>
+                                    <tr><td class="ps-4">8-9 лет</td><td class="text-muted">Мальчики/Девочки</td></tr>
+                                    <tr><td class="ps-4">10-11 лет</td><td class="text-muted">Мальчики/Девочки</td></tr>
+                                    <tr><td class="ps-4">12-13 лет</td><td class="text-muted">Юноши/Девушки</td></tr>
+                                    <tr><td class="ps-4">14-15 лет</td><td class="text-muted">Юноши/Девушки</td></tr>
+                                    <tr><td class="ps-4">16-17 лет</td><td class="text-muted">Юниоры/Юниорки</td></tr>
+                                    <tr><td class="ps-4">18+ лет</td><td class="text-muted">Мужчины/Женщины</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Информация о весовых категориях -->
-        <div class="card mt-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="bi bi-speedometer2"></i> Весовые категории</h5>
-            </div>
-            <div class="card-body">
-                <div class="accordion" id="weightAccordion">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6-7">
-                                6-7 лет
-                            </button>
-                        </h2>
-                        <div id="collapse6-7" class="accordion-collapse collapse show" data-bs-parent="#weightAccordion">
-                            <div class="accordion-body">
-                                <p><strong>Мальчики:</strong> до 20 кг, до 22,5 кг, до 25 кг, до 27,5 кг, до 30 кг, до 35 кг, свыше 35 кг</p>
-                                <p><strong>Девочки:</strong> до 20 кг, до 25 кг, до 30 кг, до 35 кг, свыше 35 кг</p>
-                            </div>
-                        </div>
+            <!-- Весовые категории -->
+            <div class="col-md-6">
+                <div class="card h-100" style="border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.1); border-left: 3px solid #2ecc71;">
+                    <div class="card-header" style="background: white; border-bottom: 1px solid #ecf0f1; padding: 1rem 1.25rem;">
+                        <h5 class="mb-0 fw-500" style="color: #2c3e50;">
+                            <i class="bi bi-speedometer2 me-2" style="color: #2ecc71;"></i>
+                            Весовые категории
+                        </h5>
                     </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse8-9">
-                                8-9 лет
-                            </button>
-                        </h2>
-                        <div id="collapse8-9" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
-                            <div class="accordion-body">
-                                <p><strong>Мальчики:</strong> до 25 кг, до 27,5 кг, до 30 кг, до 32,5 кг, до 35 кг, до 37,5 кг, до 40 кг, свыше 40 кг</p>
-                                <p><strong>Девочки:</strong> до 20 кг, до 25 кг, до 30 кг, до 35 кг, свыше 35 кг</p>
+                    <div class="card-body p-0">
+                        <div class="accordion" id="weightAccordion">
+                            <div class="accordion-item" style="border: none; border-bottom: 1px solid #ecf0f1;">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6-7" style="background: white; box-shadow: none; padding-left: 1.25rem;">
+                                        <span style="color: #2c3e50;">6-7 лет</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse6-7" class="accordion-collapse collapse show" data-bs-parent="#weightAccordion">
+                                    <div class="accordion-body py-2" style="background: #f8f9fa;">
+                                        <p class="small mb-2"><span style="color: #3498db;">Мальчики:</span> до 20, 22.5, 25, 27.5, 30, 35, свыше 35 кг</p>
+                                        <p class="small mb-0"><span style="color: #e74c3c;">Девочки:</span> до 20, 25, 30, 35, свыше 35 кг</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse10-11">
-                                10-11 лет
-                            </button>
-                        </h2>
-                        <div id="collapse10-11" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
-                            <div class="accordion-body">
-                                <p><strong>Мальчики:</strong> до 30 кг, до 35 кг, до 40 кг, до 45 кг, свыше 45 кг</p>
-                                <p><strong>Девочки:</strong> до 25 кг, до 30 кг, до 35 кг, до 40 кг, свыше 40 кг</p>
+                            <div class="accordion-item" style="border: none; border-bottom: 1px solid #ecf0f1;">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse8-9" style="background: white; box-shadow: none; padding-left: 1.25rem;">
+                                        <span style="color: #2c3e50;">8-9 лет</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse8-9" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
+                                    <div class="accordion-body py-2" style="background: #f8f9fa;">
+                                        <p class="small mb-2"><span style="color: #3498db;">Мальчики:</span> до 25, 27.5, 30, 32.5, 35, 37.5, 40, свыше 40 кг</p>
+                                        <p class="small mb-0"><span style="color: #e74c3c;">Девочки:</span> до 20, 25, 30, 35, свыше 35 кг</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse12-13">
-                                12-13 лет
-                            </button>
-                        </h2>
-                        <div id="collapse12-13" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
-                            <div class="accordion-body">
-                                <p><strong>Юноши:</strong> до 35 кг, до 40 кг, до 45 кг, до 50 кг, до 55 кг, свыше 55 кг</p>
-                                <p><strong>Девушки:</strong> до 35 кг, до 40 кг, до 45 кг, до 50 кг, свыше 50 кг</p>
+                            <div class="accordion-item" style="border: none; border-bottom: 1px solid #ecf0f1;">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse10-11" style="background: white; box-shadow: none; padding-left: 1.25rem;">
+                                        <span style="color: #2c3e50;">10-11 лет</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse10-11" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
+                                    <div class="accordion-body py-2" style="background: #f8f9fa;">
+                                        <p class="small mb-2"><span style="color: #3498db;">Мальчики:</span> до 30, 35, 40, 45, свыше 45 кг</p>
+                                        <p class="small mb-0"><span style="color: #e74c3c;">Девочки:</span> до 25, 30, 35, 40, свыше 40 кг</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse14-15">
-                                14-15 лет
-                            </button>
-                        </h2>
-                        <div id="collapse14-15" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
-                            <div class="accordion-body">
-                                <p><strong>Юноши:</strong> до 45 кг, до 50 кг, до 55 кг, до 60 кг, до 65 кг, свыше 65 кг</p>
-                                <p><strong>Девушки:</strong> до 45 кг, до 50 кг, до 55 кг, до 60 кг, свыше 60 кг</p>
+                            <div class="accordion-item" style="border: none; border-bottom: 1px solid #ecf0f1;">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse12-13" style="background: white; box-shadow: none; padding-left: 1.25rem;">
+                                        <span style="color: #2c3e50;">12-13 лет</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse12-13" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
+                                    <div class="accordion-body py-2" style="background: #f8f9fa;">
+                                        <p class="small mb-2"><span style="color: #3498db;">Юноши:</span> до 35, 40, 45, 50, 55, свыше 55 кг</p>
+                                        <p class="small mb-0"><span style="color: #e74c3c;">Девушки:</span> до 35, 40, 45, 50, свыше 50 кг</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse16-17">
-                                16-17 лет
-                            </button>
-                        </h2>
-                        <div id="collapse16-17" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
-                            <div class="accordion-body">
-                                <p><strong>Юниоры:</strong> до 60 кг, до 65 кг, до 70 кг, до 75 кг, свыше 75 кг</p>
-                                <p><strong>Юниорки:</strong> до 55 кг, до 60 кг, свыше 60 кг</p>
+                            <div class="accordion-item" style="border: none; border-bottom: 1px solid #ecf0f1;">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse14-15" style="background: white; box-shadow: none; padding-left: 1.25rem;">
+                                        <span style="color: #2c3e50;">14-15 лет</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse14-15" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
+                                    <div class="accordion-body py-2" style="background: #f8f9fa;">
+                                        <p class="small mb-2"><span style="color: #3498db;">Юноши:</span> до 45, 50, 55, 60, 65, свыше 65 кг</p>
+                                        <p class="small mb-0"><span style="color: #e74c3c;">Девушки:</span> до 45, 50, 55, 60, свыше 60 кг</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse18">
-                                18 лет и старше
-                            </button>
-                        </h2>
-                        <div id="collapse18" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
-                            <div class="accordion-body">
-                                <p><strong>Мужчины:</strong> до 70 кг, до 80 кг, до 90 кг, свыше 90 кг</p>
-                                <p><strong>Женщины:</strong> до 60 кг, до 70 кг, свыше 70 кг</p>
+                            <div class="accordion-item" style="border: none; border-bottom: 1px solid #ecf0f1;">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse16-17" style="background: white; box-shadow: none; padding-left: 1.25rem;">
+                                        <span style="color: #2c3e50;">16-17 лет</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse16-17" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
+                                    <div class="accordion-body py-2" style="background: #f8f9fa;">
+                                        <p class="small mb-2"><span style="color: #3498db;">Юниоры:</span> до 60, 65, 70, 75, свыше 75 кг</p>
+                                        <p class="small mb-0"><span style="color: #e74c3c;">Юниорки:</span> до 55, 60, свыше 60 кг</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item" style="border: none;">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse18" style="background: white; box-shadow: none; padding-left: 1.25rem;">
+                                        <span style="color: #2c3e50;">18 лет и старше</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse18" class="accordion-collapse collapse" data-bs-parent="#weightAccordion">
+                                    <div class="accordion-body py-2" style="background: #f8f9fa;">
+                                        <p class="small mb-2"><span style="color: #3498db;">Мужчины:</span> до 70, 80, 90, свыше 90 кг</p>
+                                        <p class="small mb-0"><span style="color: #e74c3c;">Женщины:</span> до 60, 70, свыше 70 кг</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -268,45 +305,115 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+/* Стили для форм */
 .form-control, .form-select {
-    border-radius: 10px;
-    padding: 10px 15px;
-    border: 2px solid #e0e0e0;
-    transition: all 0.3s;
+    border: 2px solid #ecf0f1;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background-color: white;
 }
 
 .form-control:focus, .form-select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1);
+    outline: none;
 }
 
+.form-control:hover, .form-select:hover {
+    border-color: #bdc3c7;
+}
+
+/* Кнопки */
 .btn {
-    border-radius: 25px;
-    padding: 10px 25px;
+    border-radius: 30px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
+.btn-outline-secondary {
+    border: 2px solid #ecf0f1;
+    color: #7f8c8d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #ecf0f1;
+    border-color: #bdc3c7;
+    color: #2c3e50;
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    border: none;
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+}
+
+/* Карточки */
 .card {
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     border: none;
+    border-radius: 16px;
+    transition: all 0.3s ease;
 }
 
-.alert {
-    border-radius: 10px;
-    border: none;
+.card:hover {
+    transform: translateY(-2px);
 }
 
-.table-sm td, .table-sm th {
-    padding: 0.5rem;
+/* Аккордеон */
+.accordion-item {
+    border: none;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.accordion-button {
+    padding: 1rem 1.25rem;
+    font-weight: 500;
+    color: #2c3e50;
 }
 
 .accordion-button:not(.collapsed) {
-    background-color: #e7f1ff;
-    color: #0056b3;
+    background: white;
+    color: #2c3e50;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: #ecf0f1;
 }
 
 .accordion-body {
-    background-color: #f8f9fa;
+    background: #f8f9fa;
+    padding: 1rem 1.25rem;
+}
+
+/* Алерты */
+.alert {
+    border-radius: 12px;
+    border: none;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .form-control, .form-select {
+        font-size: 0.9rem;
+    }
+
+    .btn {
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+
+    .d-flex.gap-2 {
+        flex-direction: column;
+    }
 }
 </style>
 {% endblock %}

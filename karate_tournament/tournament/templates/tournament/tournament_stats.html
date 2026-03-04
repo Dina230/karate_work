@@ -10,10 +10,6 @@
             <div class="position-relative">
                 <h1 class="fw-400 mb-0">Статистика</h1>
                 <p class="text-muted small mt-1">{{ tournament.name }}</p>
-                <!-- ИЗЮМИНКА: Маленький индикатор -->
-                <span class="position-absolute top-0 start-100 translate-middle badge bg-light text-dark border">
-                    {{ stats.total_participants }} уч.
-                </span>
             </div>
             <a href="{% url 'category_list' tournament.id %}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Назад

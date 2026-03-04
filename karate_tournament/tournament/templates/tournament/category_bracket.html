@@ -4,59 +4,159 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-12">
+        <!-- Навигация сверху -->
+        <div class="d-flex align-items-center mb-3">
+            <a href="{% url 'category_list' tournament.id %}" class="btn btn-outline-secondary btn-sm me-3">
+                <i class="bi bi-arrow-left"></i> Назад к категориям
+            </a>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none" style="color: #7f8c8d;">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'category_list' tournament.id %}" class="text-decoration-none" style="color: #7f8c8d;">Категории</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" style="color: #e74c3c;">{{ age_category }} / {{ weight_category }}</li>
+                </ol>
+            </nav>
+        </div>
+
         <!-- Заголовок -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>
-                <i class="bi bi-grid"></i>
-                {{ age_category }} - {{ gender_display }} - {{ weight_category }}
-            </h1>
+            <div>
+                <h1 class="fw-400 mb-1" style="color: #2c3e50;">{{ age_category }} — {{ gender_display }} — {{ weight_category }}</h1>
+                <p class="text-muted small mb-0">{{ tournament.name }}</p>
+            </div>
             <div>
                 <a href="{% url 'print_bracket' tournament.id age_category gender weight_category %}"
-                   class="btn btn-info" target="_blank">
-                    <i class="bi bi-printer"></i> Версия для печати
+                   class="btn btn-outline-primary btn-sm me-2" target="_blank">
+                    <i class="bi bi-printer"></i> Печать
                 </a>
                 <a href="{% url 'clear_category_matches' tournament.id age_category gender weight_category %}"
-                   class="btn btn-warning">
-                    <i class="bi bi-eraser"></i> Очистить сетку
+                   class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-eraser"></i> Очистить
                 </a>
             </div>
         </div>
 
         <!-- Информация о категории -->
-        <div class="alert alert-info">
-            <div class="row">
-                <div class="col-md-3">
-                    <strong>Возрастная категория:</strong> {{ age_category }}
-                </div>
-                <div class="col-md-2">
-                    <strong>Пол:</strong> {{ gender_display }}
-                </div>
-                <div class="col-md-4">
-                    <strong>Весовая категория:</strong> {{ weight_category }}
-                </div>
-                <div class="col-md-3">
-                    <strong>Участников:</strong>
-                    <span class="badge bg-primary fs-6">{{ participants_count }}</span>
+        <div class="card mb-4" style="border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 40px; height: 40px; background: #fef5f5; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="bi bi-tag" style="color: #e74c3c;"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted">Возраст</div>
+                                <div class="fw-500">{{ age_category }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 40px; height: 40px; background: #e8f5e9; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="bi bi-gender-ambiguous" style="color: #2ecc71;"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted">Пол</div>
+                                <div class="fw-500">{{ gender_display }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 40px; height: 40px; background: #e3f2fd; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="bi bi-speedometer2" style="color: #3498db;"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted">Весовая категория</div>
+                                <div class="fw-500">{{ weight_category }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 40px; height: 40px; background: #fff3e0; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="bi bi-people" style="color: #f39c12;"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted">Участников</div>
+                                <div class="fw-500">{{ participants_count }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Кнопка генерации сетки (если нет матчей, но есть участники) -->
+        <!-- Участники по клубам -->
+        <div class="card mb-4" style="border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <div class="card-header" style="background: white; border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-500">
+                        <i class="bi bi-people me-2" style="color: #e74c3c;"></i>
+                        Участники
+                    </h5>
+                    <span class="badge" style="background-color: #e74c3c; color: white; padding: 0.5rem 1rem;">
+                        {{ unique_clubs_count }} клубов · {{ participants_count }} чел.
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                {% if participants_by_club %}
+                    <div class="accordion" id="clubAccordion">
+                        {% for club_name, club_participants in participants_by_club.items %}
+                        <div class="accordion-item" style="border: 1px solid #ecf0f1; border-radius: 12px; margin-bottom: 0.5rem;">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                                        type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#club{{ forloop.counter }}"
+                                        style="border-radius: 12px; padding: 1rem 1.25rem;">
+                                    <strong>{{ club_name }}</strong>
+                                    <span class="badge ms-2" style="background-color: #e74c3c; color: white;">{{ club_participants|length }}</span>
+                                </button>
+                            </h2>
+                            <div id="club{{ forloop.counter }}"
+                                 class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                 data-bs-parent="#clubAccordion">
+                                <div class="accordion-body" style="background: #fafafa; border-radius: 0 0 12px 12px;">
+                                    <div class="row g-2">
+                                        {% for p in club_participants %}
+                                        <div class="col-md-4">
+                                            <div class="p-2 bg-white rounded" style="border: 1px solid #ecf0f1;">
+                                                <div class="fw-500">{{ p.last_name }} {{ p.first_name }}</div>
+                                                <div class="small text-muted">{{ p.weight }} кг</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-4 mb-0">Нет участников в этой категории</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Кнопка генерации сетки -->
         {% if not rounds and participants_count >= 2 %}
-        <div class="alert alert-warning text-center py-4 mb-4">
-            <i class="bi bi-grid fs-1 d-block mb-3"></i>
-            <h4>Турнирная сетка еще не создана</h4>
-            <p class="mb-3">В этой категории {{ participants_count }} участников из {{ club_list|length }} клубов.</p>
-            <p class="text-muted mb-3">
-                <i class="bi bi-info-circle"></i> Представители одного клуба не встретятся в первых раундах.
-            </p>
-            <form method="post" action="{% url 'generate_bracket_for_category' tournament.id age_category gender weight_category %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success btn-lg">
-                    <i class="bi bi-lightning"></i> Сгенерировать сетку
-                </button>
-            </form>
+        <div class="card mb-4" style="border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-grid-3x3-gap-fill fs-1 mb-3" style="color: #bdc3c7;"></i>
+                <h4 class="fw-400 mb-2" style="color: #2c3e50;">Турнирная сетка не создана</h4>
+                <p class="text-muted mb-4">
+                    В категории {{ participants_count }} участников из {{ unique_clubs_count }} клубов
+                </p>
+                <form method="post" action="{% url 'generate_bracket_for_category' tournament.id age_category gender weight_category %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" style="background-color: #e74c3c; border-color: #e74c3c; border-radius: 30px; padding: 0.75rem 2rem;">
+                        <i class="bi bi-lightning-charge"></i> Сгенерировать сетку
+                    </button>
+                </form>
+            </div>
         </div>
         {% endif %}
 
@@ -65,84 +165,72 @@
         <div class="bracket-container">
             {% for round_num, matches in rounds %}
             <div class="bracket-round">
-                <h5 class="text-center mb-3">
+                <h5>
                     {% if matches.0.round_name %}
                         {{ matches.0.round_name }}
-                        {% if round_num == rounds|length %}
-                            <span class="badge bg-warning text-dark">Финал</span>
-                        {% endif %}
                     {% else %}
                         Раунд {{ round_num }}
+                    {% endif %}
+                    {% if round_num == rounds|length %}
+                        <span class="badge ms-2" style="background-color: #f39c12; color: white;">Финал</span>
                     {% endif %}
                 </h5>
 
                 {% for match in matches %}
-                <div class="bracket-match
-                    {% if match.winner == match.participant1 %}winner-1{% elif match.winner == match.participant2 %}winner-2{% endif %}
-                    {% if match.participant1 and match.participant2 and match.participant1.club == match.participant2.club %}
-                        {% if round_num == rounds|length %}
-                            final-same-club
-                        {% else %}
-                            same-club-warning
-                        {% endif %}
-                    {% endif %}">
-
-                    <!-- Участник 1 -->
-                    <div class="participant-item {% if match.winner == match.participant1 %}winner{% endif %}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span>
+                <div class="bracket-match">
+                    <!-- Участник 1 или BYE -->
+                    <div class="participant-item {% if match.winner == match.participant1 %}winner{% endif %} {% if not match.participant1 %}bye-item{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
                                 {% if match.participant1 %}
-                                    <strong>{{ match.participant1.last_name }}</strong> {{ match.participant1.first_name }}
-                                    <small class="text-muted d-block">
-                                        {{ match.participant1.club|truncatechars:20 }}
-                                    </small>
+                                    <div class="fw-500">{{ match.participant1.last_name }} {{ match.participant1.first_name }}</div>
+                                    <div class="small text-muted">{{ match.participant1.club }}</div>
                                 {% else %}
-                                    <span class="text-muted fst-italic">Ожидание победителя</span>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-skip-forward me-2"></i>
+                                        <span>BYE (автоматический проход)</span>
+                                    </div>
                                 {% endif %}
-                            </span>
+                            </div>
                             {% if match.status == 'completed' and match.participant1 %}
                                 <span class="score-badge">{{ match.score_p1 }}</span>
                             {% endif %}
                         </div>
                     </div>
 
-                    <!-- Участник 2 -->
-                    <div class="participant-item {% if match.winner == match.participant2 %}winner{% endif %}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span>
+                    <!-- Участник 2 или BYE -->
+                    <div class="participant-item {% if match.winner == match.participant2 %}winner{% endif %} {% if not match.participant2 %}bye-item{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
                                 {% if match.participant2 %}
-                                    <strong>{{ match.participant2.last_name }}</strong> {{ match.participant2.first_name }}
-                                    <small class="text-muted d-block">
-                                        {{ match.participant2.club|truncatechars:20 }}
-                                    </small>
+                                    <div class="fw-500">{{ match.participant2.last_name }} {{ match.participant2.first_name }}</div>
+                                    <div class="small text-muted">{{ match.participant2.club }}</div>
                                 {% else %}
-                                    <span class="text-muted fst-italic">Ожидание победителя</span>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-skip-forward me-2"></i>
+                                        <span>BYE (автоматический проход)</span>
+                                    </div>
                                 {% endif %}
-                            </span>
+                            </div>
                             {% if match.status == 'completed' and match.participant2 %}
                                 <span class="score-badge">{{ match.score_p2 }}</span>
                             {% endif %}
                         </div>
                     </div>
 
-                    <!-- Индикатор одного клуба -->
-                    {% if match.participant1 and match.participant2 and match.participant1.club == match.participant2.club %}
-                        <div class="mt-1 text-center">
-                            {% if round_num == rounds|length %}
-                                <span class="badge bg-warning text-dark">
-                                    <i class="bi bi-star-fill"></i> Финальный бой внутри клуба
-                                </span>
+                    <!-- Действия -->
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2">
+                        <span class="small text-muted">
+                            {% if match.status == 'completed' %}
+                                Завершен
+                            {% elif match.status == 'walkover' %}
+                                Неявка
                             {% else %}
-                                <span class="badge bg-danger">
-                                    <i class="bi bi-exclamation-triangle-fill"></i> Один клуб
-                                </span>
+                                Запланирован
                             {% endif %}
-                        </div>
-                    {% endif %}
-
-                    <!-- Кнопка ввода результата -->
-                    <div class="mt-2 text-center">
-                        <a href="{% url 'match_detail' match.id %}" class="btn btn-sm {% if match.status == 'completed' %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+                        </span>
+                        <a href="{% url 'match_detail' match.id %}" class="btn btn-sm"
+                           style="border: 1px solid #e74c3c; color: #e74c3c; border-radius: 20px; padding: 0.25rem 1rem;">
                             {% if match.status == 'completed' %}
                                 <i class="bi bi-pencil"></i> Редактировать
                             {% else %}
@@ -150,168 +238,212 @@
                             {% endif %}
                         </a>
                     </div>
-
-                    <!-- Статус матча -->
-                    <div class="mt-1 text-center">
-                        <small class="badge {% if match.status == 'completed' %}bg-success{% elif match.status == 'in_progress' %}bg-warning{% else %}bg-secondary{% endif %}">
-                            {{ match.get_status_display }}
-                        </small>
-                    </div>
                 </div>
                 {% endfor %}
             </div>
             {% endfor %}
         </div>
 
+        <!-- Информация о BYE -->
+        <div class="alert alert-info mt-4" style="border-radius: 16px; border: none; background-color: #e3f2fd;">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle fs-4 me-3" style="color: #3498db;"></i>
+                <div>
+                    <strong>BYE (автоматический проход)</strong> — при нечетном количестве участников некоторые спортсмены автоматически проходят в следующий раунд.
+                </div>
+            </div>
+        </div>
+
         <!-- Легенда -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <h6><i class="bi bi-info-circle"></i> Информация о сетке:</h6>
+        <div class="card mt-4" style="border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <div class="card-body p-4">
+                <h6 class="fw-500 mb-3"><i class="bi bi-info-circle me-2" style="color: #e74c3c;"></i>Обозначения</h6>
                 <div class="row">
-                    <div class="col-md-4">
-                        <span class="badge bg-success me-2">Зеленый</span> Победитель
+                    <div class="col-md-3">
+                        <span class="badge me-2" style="background-color: #d4edda; color: #155724;">&nbsp;</span> Победитель
                     </div>
-                    <div class="col-md-4">
-                        <span class="badge bg-danger me-2">Красная граница</span> Встреча внутри одного клуба (если не финал)
+                    <div class="col-md-3">
+                        <span class="badge me-2" style="background-color: #e3f2fd; color: #0c5460;">&nbsp;</span> BYE
                     </div>
-                    <div class="col-md-4">
-                        <span class="badge bg-warning text-dark me-2">Желтый</span> Финальный бой внутри клуба
+                    <div class="col-md-3">
+                        <span class="badge me-2" style="background-color: #fef5f5; color: #e74c3c;">&nbsp;</span> Ожидание
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge me-2" style="background-color: #f39c12; color: white;">&nbsp;</span> Финал
                     </div>
                 </div>
-                <p class="text-muted mt-2 mb-0">
-                    <i class="bi bi-check-circle"></i> Представители одного клуба распределены по разным половинам сетки.
-                </p>
             </div>
         </div>
         {% endif %}
 
-        <!-- Навигация -->
-        <div class="mt-4">
-            <a href="{% url 'category_list' tournament.id %}" class="btn btn-secondary">
+        <!-- Навигация снизу -->
+        <div class="d-flex align-items-center justify-content-between mt-4 pt-3" style="border-top: 1px solid #ecf0f1;">
+            <a href="{% url 'category_list' tournament.id %}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Назад к категориям
             </a>
 
-            {% if participants_count >= 2 and not rounds %}
-            <a href="{% url 'generate_all_brackets' tournament.id %}" class="btn btn-success ms-2">
-                <i class="bi bi-grid"></i> Сгенерировать все сетки
-            </a>
-            {% endif %}
+            <div>
+                {% if participants_count >= 2 and not rounds %}
+                <a href="{% url 'generate_all_brackets' tournament.id %}" class="btn btn-outline-success ms-2">
+                    <i class="bi bi-grid"></i> Сгенерировать все сетки
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
 <style>
+/* Контейнер сетки */
 .bracket-container {
     display: flex;
+    gap: 2rem;
     overflow-x: auto;
-    gap: 30px;
-    padding: 20px 0;
-    min-height: 500px;
+    padding: 1rem 0;
 }
 
+/* Раунд */
 .bracket-round {
     min-width: 320px;
 }
 
+.bracket-round h5 {
+    font-weight: 500;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #7f8c8d;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+/* Карточка матча */
 .bracket-match {
     background: white;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 25px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    border-left: 5px solid #007bff;
-    transition: transform 0.2s;
-    position: relative;
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ecf0f1;
+    transition: all 0.3s ease;
 }
 
 .bracket-match:hover {
+    border-color: #e74c3c;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.1);
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
-.bracket-match.winner-1 {
-    border-left-color: #28a745;
-}
-
-.bracket-match.winner-2 {
-    border-left-color: #dc3545;
-}
-
-.bracket-match.same-club-warning {
-    border-left-color: #dc3545;
-    background: #fff5f5;
-}
-
-.bracket-match.final-same-club {
-    border-left-color: #ffc107;
-    background: #fff9e6;
-}
-
+/* Участник */
 .participant-item {
-    padding: 10px;
-    margin: 5px 0;
+    padding: 0.75rem;
+    margin: 0.25rem 0;
     background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
 }
 
 .participant-item.winner {
     background: #d4edda;
-    border-color: #c3e6cb;
-    font-weight: bold;
+    border-left: 3px solid #2ecc71;
 }
 
-.participant-item.winner .score-badge {
-    background: #28a745;
+/* BYE */
+.bye-item {
+    background: #e3f2fd;
+    border: 1px dashed #3498db;
+    color: #3498db;
 }
 
-.participant-card {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 10px;
-    border: 1px solid #dee2e6;
-    transition: all 0.2s;
-    height: 100%;
+.bye-item i {
+    color: #3498db;
 }
 
-.participant-card:hover {
-    background: #e9ecef;
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-}
-
+/* Счет */
 .score-badge {
-    background: #6c757d;
+    background: #2c3e50;
     color: white;
-    padding: 3px 10px;
+    padding: 0.2rem 0.8rem;
     border-radius: 20px;
-    font-size: 1rem;
-    font-weight: bold;
-    min-width: 40px;
-    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 500;
 }
 
+/* Кнопки */
 .btn-sm {
-    padding: 0.25rem 0.75rem;
     border-radius: 20px;
+    padding: 0.25rem 1rem;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
 }
 
-.badge {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.6rem;
+.btn-sm:hover {
+    background-color: #e74c3c !important;
+    color: white !important;
+}
+
+.btn-outline-secondary {
+    border: 1px solid #ecf0f1;
+    color: #7f8c8d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #e74c3c;
+    color: #e74c3c;
+}
+
+/* Аккордеон */
+.accordion-item {
+    border: 1px solid #ecf0f1;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+}
+
+.accordion-button {
+    padding: 1rem 1.25rem;
+    background: white;
+    border-radius: 12px !important;
+    box-shadow: none;
+    font-weight: 500;
 }
 
 .accordion-button:not(.collapsed) {
-    background-color: #e7f1ff;
-    color: #0056b3;
+    background: white;
+    color: #2c3e50;
 }
 
 .accordion-button:focus {
     box-shadow: none;
-    border-color: rgba(0,0,0,.125);
+    border-color: #ecf0f1;
 }
 
-/* Адаптивность для мобильных */
+.accordion-body {
+    padding: 1.25rem;
+    background: #fafafa;
+}
+
+/* Бейджи */
+.badge {
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+    border-radius: 30px;
+    font-size: 0.85rem;
+}
+
+/* Хлебные крошки */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+}
+
+.breadcrumb-item a:hover {
+    color: #e74c3c !important;
+}
+
+/* Адаптивность */
 @media (max-width: 768px) {
     .bracket-round {
         min-width: 280px;
@@ -319,40 +451,47 @@
 
     .participant-item {
         font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+
+    .bracket-match {
+        padding: 1rem;
     }
 
     .score-badge {
         font-size: 0.8rem;
-        padding: 2px 6px;
+        padding: 0.15rem 0.6rem;
     }
 
-    .participant-card {
-        font-size: 0.9rem;
+    .d-flex.align-items-center.mb-3 {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.5rem;
     }
 }
 </style>
 
 <script>
-// Добавляем подсветку при наведении
+// Подтверждение перед очисткой
 document.addEventListener('DOMContentLoaded', function() {
+    const clearBtn = document.querySelector('.btn-outline-danger');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function(e) {
+            if (!confirm('Вы уверены, что хотите очистить все матчи в этой категории?')) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // Подсветка при наведении
     const matches = document.querySelectorAll('.bracket-match');
     matches.forEach(match => {
         match.addEventListener('mouseenter', function() {
-            this.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+            this.style.boxShadow = '0 8px 20px rgba(231, 76, 60, 0.15)';
         });
         match.addEventListener('mouseleave', function() {
-            this.style.boxShadow = '0 3px 10px rgba(0,0,0,0.1)';
+            this.style.boxShadow = 'none';
         });
-    });
-
-    // Автоматически закрывать алерты через 5 секунд
-    const alerts = document.querySelectorAll('.alert:not(.alert-info)');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.transition = 'opacity 0.5s';
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 500);
-        }, 5000);
     });
 });
 </script>
