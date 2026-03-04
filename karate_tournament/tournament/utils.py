@@ -5,26 +5,36 @@ from .models import Participant, Match
 
 
 def get_unique_categories(tournament):
+    """Получение уникальных комбинаций категорий"""
     participants = Participant.objects.filter(tournament=tournament)
+
     categories = set()
     for p in participants:
         if p.age_category and p.weight_category:
             categories.add((p.age_category, p.gender, p.weight_category))
+
     return sorted(list(categories))
 
 
 def distribute_participants_by_club(participants):
+    """
+    Распределяет участников по турнирной сетке
+    """
     if len(participants) <= 2:
         return participants
 
+    # Группируем по клубам
     clubs = defaultdict(list)
     for p in participants:
         clubs[p.club].append(p)
 
+    # Сортируем клубы по количеству участников
     sorted_clubs = sorted(clubs.items(), key=lambda x: len(x[1]), reverse=True)
+
     total = len(participants)
     bracket_size = 2 ** math.ceil(math.log2(total))
 
+    # Стандартные позиции для турнирной сетки
     def get_seed_positions(size):
         if size == 2:
             return [0, 1]
@@ -43,13 +53,14 @@ def distribute_participants_by_club(participants):
     bracket = [None] * bracket_size
     idx = 0
 
+    # Размещаем участников
     for _, members in sorted_clubs:
         for member in members:
             if idx < len(positions):
                 bracket[positions[idx]] = member
                 idx += 1
 
-    # Исправляем коллизии
+    # Исправляем коллизии (одинаковые клубы в одном матче)
     for i in range(0, bracket_size, 2):
         if i + 1 < bracket_size:
             p1, p2 = bracket[i], bracket[i + 1]
@@ -63,6 +74,9 @@ def distribute_participants_by_club(participants):
 
 
 def generate_bracket_for_category(tournament, age_category, gender, weight_category):
+    """
+    Генерация олимпийской сетки для любого количества участников
+    """
     print(f"\n{'=' * 50}")
     print(f"Генерация сетки для: {age_category}, {gender}, {weight_category}")
 
@@ -112,21 +126,23 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
         else:
             round_names[i] = f"1/{2 ** (total_rounds - i + 1)}"
 
-    # Матчи в первом раунде = full_size // 2
-    matches_in_first = full_size // 2
-    # Но реальных матчей меньше, так как есть BYE
-    # Количество реальных матчей в первом раунде = (n - byes) // 2
-
     all_matches = []
     match_order = 0
 
     # ПЕРВЫЙ РАУНД
     first_round = []
-    real_matches_in_first = (n - byes) // 2
+    matches_in_first = full_size // 2
 
-    print(f"\nПервый раунд: {real_matches_in_first} матчей, {byes} BYE")
+    print(f"\nПервый раунд: {matches_in_first} матчей")
 
-    # Индекс текущего участника
+    # Количество реальных матчей (с двумя участниками)
+    real_matches = (n - byes) // 2
+    # Количество BYE матчей (с одним участником)
+    bye_matches = byes
+
+    print(f"  Реальных матчей: {real_matches}")
+    print(f"  BYE матчей: {bye_matches}")
+
     p_idx = 0
 
     for i in range(matches_in_first):
@@ -140,8 +156,8 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
             match_order=match_order
         )
 
-        # Если есть реальный матч
-        if i < real_matches_in_first:
+        if i < real_matches:
+            # Реальный матч с двумя участниками
             match.participant1 = participants[p_idx]
             p_idx += 1
             match.participant2 = participants[p_idx]
@@ -150,9 +166,8 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
             first_round.append(match)
             print(f"  Матч {i + 1}: {match.participant1.last_name} vs {match.participant2.last_name}")
         else:
-            # Это BYE - участник автоматически проходит
+            # BYE матч - только один участник автоматически проходит
             if p_idx < n:
-                # Создаем "виртуальный" матч, который сразу завершаем
                 match.participant1 = participants[p_idx]
                 p_idx += 1
                 match.winner = match.participant1
@@ -189,40 +204,43 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
             match_order += 1
 
             # Связываем с предыдущими матчами
-            left = current_round[i * 2]
-            right = current_round[i * 2 + 1] if i * 2 + 1 < len(current_round) else None
+            left_idx = i * 2
+            right_idx = i * 2 + 1
 
-            left.next_match = match
-            left.save()
+            if left_idx < len(current_round):
+                current_round[left_idx].next_match = match
+                current_round[left_idx].save()
 
-            if right:
-                right.next_match = match
-                right.save()
+            if right_idx < len(current_round):
+                current_round[right_idx].next_match = match
+                current_round[right_idx].save()
 
             next_round.append(match)
-            print(f"  Матч {i + 1} создан")
 
             # Если левый матч уже завершен (BYE), автоматически добавляем победителя
-            if left.status == 'completed' and left.winner:
+            if left_idx < len(current_round) and current_round[left_idx].status == 'completed' and current_round[
+                left_idx].winner:
                 if not match.participant1:
-                    match.participant1 = left.winner
+                    match.participant1 = current_round[left_idx].winner
                     match.save()
-                    print(f"    → {left.winner.last_name} добавлен в матч")
+                    print(f"    → {current_round[left_idx].winner.last_name} добавлен в матч")
 
             # Если правый матч уже завершен (BYE), автоматически добавляем победителя
-            if right and right.status == 'completed' and right.winner:
-                if not match.participant2 and match.participant1 != right.winner:
-                    match.participant2 = right.winner
+            if right_idx < len(current_round) and current_round[right_idx].status == 'completed' and current_round[
+                right_idx].winner:
+                if not match.participant2 and match.participant1 != current_round[right_idx].winner:
+                    match.participant2 = current_round[right_idx].winner
                     match.save()
-                    print(f"    → {right.winner.last_name} добавлен в матч")
+                    print(f"    → {current_round[right_idx].winner.last_name} добавлен в матч")
 
         # Запоминаем полуфиналы
         if round_names[round_num] == "1/2":
             semi_finals = next_round.copy()
+            print(f"  → Полуфиналы: {len(semi_finals)} матчей")
 
         current_round = next_round
 
-    # БОЙ ЗА 3 МЕСТО
+    # БОЙ ЗА 3 МЕСТО (только если есть полуфиналы и участников достаточно)
     if semi_finals and len(semi_finals) >= 2 and total_rounds >= 3:
         print(f"\nСоздание боя за 3 место")
 
@@ -239,17 +257,18 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
         third_match.save()
         all_matches.append(third_match)
 
-        for semi in semi_finals:
+        # Связываем полуфиналы с боем за 3 место
+        for i, semi in enumerate(semi_finals):
             semi.third_place_match = third_match
             semi.save()
-
-        print(f"  Бой за 3 место создан")
+            print(f"  Полуфинал {i + 1} связан с боем за 3 место")
 
     print(f"\nГенерация завершена. Всего матчей: {len(all_matches)}")
     return True
 
 
 def get_category_stats(tournament):
+    """Статистика по категориям"""
     participants = Participant.objects.filter(tournament=tournament)
 
     stats = {}
@@ -270,6 +289,27 @@ def get_category_stats(tournament):
             stats[key]['participants'].append(p)
             stats[key]['clubs'].add(p.club)
 
+    # Добавляем информацию о матчах
+    from django.db.models import Count, Q
+    for key, data in stats.items():
+        age = data['age_category']
+        gender = data['gender_code']
+        weight = data['weight_category']
+
+        matches = Match.objects.filter(
+            tournament=tournament,
+            age_category=age,
+            gender=gender,
+            weight_category=weight
+        )
+
+        data['total_matches'] = matches.count()
+        data['completed_matches'] = matches.filter(status='completed').count()
+        data['pending_matches'] = matches.filter(status__in=['scheduled', 'in_progress']).count()
+        data['has_matches'] = data['total_matches'] > 0
+        data['all_matches_completed'] = data['total_matches'] > 0 and data['completed_matches'] == data['total_matches']
+
+    # Преобразуем set в список для шаблона
     for key in stats:
         stats[key]['clubs'] = list(stats[key]['clubs'])
         stats[key]['unique_clubs'] = len(stats[key]['clubs'])
@@ -278,12 +318,17 @@ def get_category_stats(tournament):
 
 
 def process_excel_file(excel_file, tournament, clear_existing=False):
+    """Обработка Excel файла"""
     import pandas as pd
     from datetime import datetime
 
     try:
         df = pd.read_excel(excel_file)
+
         required = ['Фамилия', 'Имя', 'Дата рождения', 'Пол', 'Вес', 'Клуб']
+        missing = [c for c in required if c not in df.columns]
+        if missing:
+            return {'success': False, 'error': f'Нет колонок: {missing}'}
 
         if clear_existing:
             Participant.objects.filter(tournament=tournament).delete()
@@ -293,6 +338,7 @@ def process_excel_file(excel_file, tournament, clear_existing=False):
 
         for idx, row in df.iterrows():
             try:
+                # Дата
                 bd = row['Дата рождения']
                 if isinstance(bd, str):
                     try:
@@ -304,10 +350,14 @@ def process_excel_file(excel_file, tournament, clear_existing=False):
                 else:
                     continue
 
+                # Пол
                 g = str(row['Пол']).upper().strip()
-                gender = 'M' if g in ['М', 'M', 'МУЖ'] else 'F'
+                gender = 'M' if g in ['М', 'M', 'МУЖ', 'МУЖСКОЙ'] else 'F'
 
+                # Клуб
                 club = str(row['Клуб']).strip()
+
+                # Вес
                 weight = float(row['Вес']) if isinstance(row['Вес'], (int, float)) else float(
                     str(row['Вес']).replace(',', '.'))
 

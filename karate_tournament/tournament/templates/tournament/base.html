@@ -8,523 +8,271 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/static/karate-icon.png">
     <link rel="shortcut icon" href="/static/karate-icon.png">
-
-    <!-- Для ретина-дисплеев (опционально) -->
     <link rel="apple-touch-icon" href="/static/karate-icon.png">
-
-    <meta name="theme-color" content="#e74c3c">
+    <meta name="theme-color" content="#800000">
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
 
     <style>
-        /* Минималистичный дизайн */
+        /* Основной фон */
         body {
             background-color: #fafafa;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: #2d3436;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #333;
         }
 
-        /* Навигация */
+        /* ===== ШАПКА В СТИЛЕ ФУТЕРА (БЕЗ МОЛНИИ) ===== */
         .navbar {
-            background-color: white !important;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            padding: 1rem 0;
+            background: linear-gradient(135deg, #1a0808, #2c0a0a, #1a0808);
+            border-bottom: 2px solid #b34747;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            padding: 0.8rem 0;
+            position: relative;
+        }
+
+        .navbar::before {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #b34747, #b34747, #b34747, transparent);
         }
 
         .navbar-brand {
-            font-weight: 500;
-            font-size: 1.25rem;
-            color: #2d3436 !important;
-            letter-spacing: -0.01em;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: #ffffff !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 0.5px;
+            position: relative;
+            padding-left: 1rem;
         }
 
         .navbar-brand i {
-            color: #e74c3c;
-            margin-right: 0.5rem;
+            color: #ffffff;
+            margin-right: 0.7rem;
+            font-size: 1.6rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover i {
+            transform: rotate(15deg) scale(1.1);
+            color: #ffffff;
+        }
+
+        .navbar-brand::before {
+            content: '●';
+            position: absolute;
+            left: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b34747;
+            font-size: 0.8rem;
+            opacity: 0.8;
         }
 
         .nav-link {
-            color: #636e72 !important;
-            font-weight: 400;
-            font-size: 0.95rem;
-            padding: 0.5rem 1rem !important;
-            transition: color 0.2s;
+            color: #ffffff !important;
+            font-weight: 500;
+            padding: 0.5rem 1.2rem !important;
+            margin: 0 0.2rem;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
         .nav-link:hover {
-            color: #2d3436 !important;
+            color: #ffffff !important;
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: #b34747;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 70%;
+        }
+
+        /* Бургер-меню */
+        .navbar-toggler {
+            background: #b34747;
+            border: 1px solid #ffffff;
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+            outline: none;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='white' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Стили для мобильного меню */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: linear-gradient(135deg, #2c0a0a, #1a0808);
+                border-radius: 12px;
+                padding: 1rem;
+                margin-top: 1rem;
+                border: 1px solid #b34747;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            }
+
+            .nav-link {
+                text-align: center;
+                margin: 0.3rem 0;
+                padding: 0.7rem !important;
+            }
+
+            .nav-link::after {
+                display: none;
+            }
+
+            .nav-link:hover {
+                background: rgba(255,255,255,0.2);
+            }
+        }
+
+        /* Контент */
+        main {
+            min-height: calc(100vh - 200px);
         }
 
         /* Карточки */
         .card {
             border: none;
-            border-radius: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            transition: box-shadow 0.2s;
-            margin-bottom: 1.5rem;
-        }
-
-        .card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
         }
 
         .card-header {
             background: white;
-            border-bottom: 1px solid #f0f0f0;
-            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #eee;
+            padding: 1rem 1.25rem;
             font-weight: 500;
-            font-size: 1.1rem;
-            color: #2d3436;
-            border-radius: 16px 16px 0 0 !important;
-        }
-
-        .card-body {
-            padding: 1.5rem;
         }
 
         /* Кнопки */
-        .btn {
-            border-radius: 30px;
-            padding: 0.5rem 1.5rem;
-            font-weight: 450;
-            font-size: 0.95rem;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-        }
-
         .btn-primary {
-            background-color: #e74c3c;
-            border-color: #e74c3c;
-            color: white;
+            background-color: #800000;
+            border-color: #800000;
         }
 
         .btn-primary:hover {
-            background-color: #c0392b;
-            border-color: #c0392b;
+            background-color: #660000;
+            border-color: #660000;
         }
 
-        .btn-outline-primary {
-            border: 1px solid #e74c3c;
-            color: #e74c3c;
-            background: transparent;
-        }
-
-        .btn-outline-primary:hover {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-outline-secondary {
-            border: 1px solid #e0e0e0;
-            color: #95a5a6;
-        }
-
-        .btn-outline-secondary:hover {
-            background: #f0f0f0;
-            color: #2d3436;
-            border-color: #e0e0e0;
-        }
-
-        .btn-success {
-            background-color: #2ecc71;
-            border-color: #2ecc71;
-        }
-
-        .btn-success:hover {
-            background-color: #27ae60;
-            border-color: #27ae60;
-        }
-
-        .btn-info {
-            background-color: #3498db;
-            border-color: #3498db;
-            color: white;
-        }
-
-        .btn-info:hover {
-            background-color: #2980b9;
-            border-color: #2980b9;
-        }
-
-        .btn-danger {
-            background-color: #e74c3c;
-            border-color: #e74c3c;
-        }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-            border-color: #c0392b;
-        }
-
-        .btn-sm {
-            padding: 0.4rem 1.2rem;
-            font-size: 0.85rem;
-        }
-
-        .btn-lg {
-            padding: 0.75rem 2rem;
-            font-size: 1rem;
-        }
-
-        /* Таблицы */
-        .table {
-            color: #2d3436;
-            margin-bottom: 0;
-        }
-
-        .table thead th {
-            border-bottom: 1px solid #f0f0f0;
-            font-weight: 500;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
-            color: #7f8c8d;
-            padding: 1rem;
-        }
-
-        .table td {
-            padding: 1rem;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: #fafafa;
-        }
-
-        /* Формы */
-        .form-control, .form-select {
-            border: 1px solid #e0e0e0;
-            border-radius: 30px;
-            padding: 0.6rem 1.25rem;
-            font-size: 0.95rem;
-            transition: border-color 0.2s;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #e74c3c;
-            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
-            outline: none;
-        }
-
-        .form-label {
-            font-weight: 450;
-            font-size: 0.95rem;
-            color: #2d3436;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-text {
-            color: #95a5a6;
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
-        }
-
-        /* Турнирная сетка */
-        .bracket-container {
-            display: flex;
-            gap: 2rem;
-            overflow-x: auto;
-            padding: 1rem 0;
-        }
-
-        .bracket-round {
-            min-width: 280px;
-        }
-
-        .bracket-round h5 {
-            font-weight: 500;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
-            color: #7f8c8d;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .bracket-match {
-            background: white;
-            border-radius: 16px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            border: 1px solid #f0f0f0;
-            transition: border-color 0.2s;
-        }
-
-        .bracket-match:hover {
-            border-color: #e74c3c;
-        }
-
-        .participant-item {
-            padding: 0.75rem;
-            margin: 0.25rem 0;
-            background: #fafafa;
-            border-radius: 12px;
-            font-size: 0.95rem;
-        }
-
-        .participant-item.winner {
-            background: #fef5f5;
-            border-left: 3px solid #e74c3c;
-        }
-
-        .participant-item .club {
-            font-size: 0.85rem;
-            color: #95a5a6;
-            margin-top: 0.25rem;
-        }
-
-        .score-badge {
-            background: #2d3436;
-            color: white;
-            padding: 0.2rem 0.8rem;
-            border-radius: 30px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        /* Алерты */
-        .alert {
-            border: none;
-            border-radius: 16px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid transparent;
-        }
-
-        .alert-success {
-            background-color: #e8f5e9;
-            color: #2ecc71;
-            border-left-color: #2ecc71;
-        }
-
-        .alert-info {
-            background-color: #e3f2fd;
-            color: #3498db;
-            border-left-color: #3498db;
-        }
-
-        .alert-warning {
-            background-color: #fff3e0;
-            color: #f39c12;
-            border-left-color: #f39c12;
-        }
-
-        .alert-danger {
-            background-color: #fef5f5;
-            color: #e74c3c;
-            border-left-color: #e74c3c;
-        }
-
-        /* Аккордеон */
-        .accordion-item {
-            border: 1px solid #f0f0f0;
-            border-radius: 16px;
-            margin-bottom: 0.5rem;
-            overflow: hidden;
-        }
-
-        .accordion-button {
-            padding: 1rem 1.5rem;
-            background: white;
-            border-radius: 16px !important;
-            box-shadow: none;
-            font-weight: 500;
-        }
-
-        .accordion-button:not(.collapsed) {
-            background: white;
-            color: #2d3436;
-        }
-
-        .accordion-button:focus {
-            box-shadow: none;
-            border-color: #f0f0f0;
-        }
-
-        .accordion-body {
-            padding: 1.5rem;
-            background: #fafafa;
-        }
-
-        /* Бейджи */
-        .badge {
-            font-weight: 450;
-            padding: 0.4rem 0.8rem;
-            border-radius: 30px;
-            font-size: 0.85rem;
-        }
-
-        .badge.bg-primary {
-            background-color: #e74c3c !important;
-        }
-
-        .badge.bg-success {
-            background-color: #2ecc71 !important;
-        }
-
-        .badge.bg-info {
-            background-color: #3498db !important;
-        }
-
-        .badge.bg-warning {
-            background-color: #f39c12 !important;
-            color: white;
-        }
-
-        .badge.bg-secondary {
-            background-color: #f0f0f0 !important;
-            color: #7f8c8d !important;
-        }
-
-        /* Футер */
+        /* ===== СТИЛЬНЫЙ ФУТЕР ===== */
         .footer {
-            background: white;
-            padding: 2rem 0;
+            background: linear-gradient(135deg, #1a0808, #2c0a0a, #1a0808);
+            border-top: 2px solid #b34747;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.2);
+            padding: 2.5rem 0 2rem;
             margin-top: 4rem;
-            border-top: 1px solid #f0f0f0;
-            color: #95a5a6;
-            font-size: 0.9rem;
+            color: #ffffff;
+            position: relative;
         }
 
-        /* Заголовки */
-        h1, h2, h3, h4, h5, h6 {
-            font-weight: 450;
-            letter-spacing: -0.01em;
-            color: #2d3436;
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #b34747, #b34747, #b34747, transparent);
         }
 
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 400;
+        .footer::after {
+            content: '⛩️';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #b34747;
+            color: #ffffff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
-        h2 {
-            font-size: 1.75rem;
-            font-weight: 400;
-        }
-
-        /* Прогресс-бары */
-        .progress {
-            height: 6px;
-            border-radius: 3px;
-            background-color: #f0f0f0;
-        }
-
-        .progress-bar {
-            border-radius: 3px;
-        }
-
-        .progress-bar.bg-primary {
-            background-color: #e74c3c !important;
-        }
-
-        .progress-bar.bg-success {
-            background-color: #2ecc71 !important;
-        }
-
-        .progress-bar.bg-info {
-            background-color: #3498db !important;
-        }
-
-        /* Список групп */
-        .list-group-item {
-            border: 1px solid #f0f0f0;
-            border-radius: 16px !important;
+        .footer p {
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             margin-bottom: 0.5rem;
-            padding: 1.25rem;
         }
 
-        /* Пустое состояние */
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: white;
-            border-radius: 16px;
-            border: 2px dashed #f0f0f0;
+        .footer .text-muted {
+            color: #ffffff !important;
+            opacity: 0.7;
         }
 
-        .empty-state i {
-            font-size: 3rem;
-            color: #e0e0e0;
-            margin-bottom: 1rem;
+        .footer a {
+            color: #ffffff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+            opacity: 0.9;
         }
 
         /* Адаптивность */
         @media (max-width: 768px) {
-            .container {
-                padding: 0 1.25rem;
+            .navbar-brand {
+                font-size: 1.2rem;
             }
 
-            h1 {
-                font-size: 2rem;
+            .footer {
+                padding: 2rem 0 1.5rem;
             }
 
-            .btn-lg {
-                padding: 0.6rem 1.5rem;
+            .footer::after {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+                top: -12px;
             }
-
-            .card-header {
-                padding: 1rem 1.25rem;
-            }
-
-            .card-body {
-                padding: 1.25rem;
-            }
-        }
-
-        /* Утилиты */
-        .text-muted {
-            color: #95a5a6 !important;
-        }
-
-        .text-primary {
-            color: #e74c3c !important;
-        }
-
-        .text-success {
-            color: #2ecc71 !important;
-        }
-
-        .text-info {
-            color: #3498db !important;
-        }
-
-        .bg-light {
-            background-color: #fafafa !important;
-        }
-
-        hr {
-            border-color: #f0f0f0;
-            opacity: 1;
-        }
-
-        /* Ссылки */
-        a {
-            color: #e74c3c;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        a:hover {
-            color: #c0392b;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Навигация -->
+    <!-- Шапка с бургер-меню -->
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="{% url 'index' %}">
                 <i class="bi bi-trophy"></i> Школа Карате РТ
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -532,6 +280,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'index' %}">Главная</a>
                     </li>
+                    <!-- Здесь можно добавить другие пункты меню -->
                 </ul>
             </div>
         </div>
@@ -543,7 +292,7 @@
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        <i class="bi bi-info-circle me-2"></i> {{ message }}
+                        {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
@@ -553,15 +302,11 @@
         </div>
     </main>
 
-    <!-- Футер -->
+    <!-- Стильный футер -->
     <footer class="footer">
         <div class="container text-center">
-            <p class="mb-0">
-                © 2026 Школа Карате Республики Татарстан
-            </p>
-            <p class="mb-0 small text-muted mt-2">
-                г. Альметьевск
-            </p>
+            <p class="mb-1">© 2026 Школа Карате Республики Татарстан</p>
+            <p class="mb-0 small opacity-75">г. Альметьевск</p>
         </div>
     </footer>
 
