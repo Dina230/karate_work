@@ -89,7 +89,7 @@
             </div>
         </div>
 
-        <!-- Участники по клубам -->
+        <!-- Участники по клубам и тренерам -->
         <div class="card mb-4" style="border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
             <div class="card-header" style="background: white; border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
                 <div class="d-flex justify-content-between align-items-center">
@@ -122,10 +122,22 @@
                                 <div class="accordion-body" style="background: #fafafa; border-radius: 0 0 12px 12px;">
                                     <div class="row g-2">
                                         {% for p in club_participants %}
-                                        <div class="col-md-4">
-                                            <div class="p-2 bg-white rounded" style="border: 1px solid #ecf0f1;">
-                                                <div class="fw-500">{{ p.last_name }} {{ p.first_name }}</div>
-                                                <div class="small text-muted">{{ p.weight }} кг</div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="p-3 bg-white rounded" style="border: 1px solid #ecf0f1; height: 100%;">
+                                                <div class="fw-500 mb-1">{{ p.last_name }} {{ p.first_name }}</div>
+                                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                                    <span class="badge bg-light text-dark" style="font-weight: normal;">
+                                                        <i class="bi bi-speedometer2 me-1" style="color: #e74c3c;"></i>{{ p.weight }} кг
+                                                    </span>
+                                                    {% if p.coach %}
+                                                    <span class="badge bg-light text-dark" style="font-weight: normal;">
+                                                        <i class="bi bi-person-badge me-1" style="color: #3498db;"></i>{{ p.coach }}
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="small text-muted mt-2">
+                                                    <i class="bi bi-calendar me-1"></i>{{ p.age }} лет
+                                                </div>
                                             </div>
                                         </div>
                                         {% endfor %}
@@ -185,6 +197,11 @@
                                 {% if match.participant1 %}
                                     <div class="fw-500">{{ match.participant1.last_name }} {{ match.participant1.first_name }}</div>
                                     <div class="small text-muted">{{ match.participant1.club }}</div>
+                                    {% if match.participant1.coach %}
+                                    <div class="small text-muted mt-1">
+                                        <i class="bi bi-person-badge me-1" style="color: #3498db;"></i>{{ match.participant1.coach }}
+                                    </div>
+                                    {% endif %}
                                 {% else %}
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-skip-forward me-2"></i>
@@ -205,6 +222,11 @@
                                 {% if match.participant2 %}
                                     <div class="fw-500">{{ match.participant2.last_name }} {{ match.participant2.first_name }}</div>
                                     <div class="small text-muted">{{ match.participant2.club }}</div>
+                                    {% if match.participant2.coach %}
+                                    <div class="small text-muted mt-1">
+                                        <i class="bi bi-person-badge me-1" style="color: #3498db;"></i>{{ match.participant2.coach }}
+                                    </div>
+                                    {% endif %}
                                 {% else %}
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-skip-forward me-2"></i>
@@ -441,6 +463,13 @@
 
 .breadcrumb-item a:hover {
     color: #e74c3c !important;
+}
+
+/* Информационные бейджи */
+.badge.bg-light {
+    background-color: #f8f9fa !important;
+    color: #2c3e50 !important;
+    border: 1px solid #ecf0f1;
 }
 
 /* Адаптивность */

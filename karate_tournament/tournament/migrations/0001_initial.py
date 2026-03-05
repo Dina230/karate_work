@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=200, verbose_name='Название турнира')),
                 ('date', models.DateField(verbose_name='Дата проведения')),
-                ('location', models.CharField(default='г.Казань, пр-кт Ибрагимова, д.44 Спортивный Комплекс «Батыр»', max_length=300, verbose_name='Место проведения')),
+                ('location', models.CharField(default='г. Альметьевск, пр-кт Строителей, д.9А Спортивный Комплекс «Батыр»', max_length=300, verbose_name='Место проведения')),
                 ('is_active', models.BooleanField(default=True, verbose_name='Активный')),
                 ('registration_deadline', models.DateField(verbose_name='Дедлайн регистрации')),
             ],

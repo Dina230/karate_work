@@ -8,7 +8,7 @@ class Tournament(models.Model):
     name = models.CharField(max_length=200, verbose_name="Название турнира")
     date = models.DateField(verbose_name="Дата проведения")
     location = models.CharField(max_length=300, verbose_name="Место проведения",
-                                default="г.Казань, пр-кт Ибрагимова, д.44 Спортивный Комплекс «Батыр»")
+                                default="г. Альметьевск, пр-кт Строителей, д.9А Спортивный Комплекс «Батыр»")
     is_active = models.BooleanField(default=True, verbose_name="Активный")
     registration_deadline = models.DateField(verbose_name="Дедлайн регистрации", null=True, blank=True)
 

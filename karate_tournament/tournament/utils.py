@@ -15,21 +15,21 @@ def get_unique_categories(tournament):
 
     return sorted(list(categories))
 
-
-def distribute_participants_by_club(participants):
+def distribute_participants_by_club_and_coach(participants):
     """
-    Распределяет участников по турнирной сетке
+    Распределяет участников по турнирной сетке с учетом клуба и тренера
     """
     if len(participants) <= 2:
         return participants
 
-    # Группируем по клубам
-    clubs = defaultdict(list)
+    # Группируем сначала по клубам, затем по тренерам
+    clubs = defaultdict(lambda: defaultdict(list))
     for p in participants:
-        clubs[p.club].append(p)
+        coach_key = p.coach if p.coach else "Без тренера"
+        clubs[p.club][coach_key].append(p)
 
-    # Сортируем клубы по количеству участников
-    sorted_clubs = sorted(clubs.items(), key=lambda x: len(x[1]), reverse=True)
+    # Сортируем клубы по общему количеству участников
+    sorted_clubs = sorted(clubs.items(), key=lambda x: sum(len(coach_list) for coach_list in x[1].values()), reverse=True)
 
     total = len(participants)
     bracket_size = 2 ** math.ceil(math.log2(total))
@@ -53,25 +53,47 @@ def distribute_participants_by_club(participants):
     bracket = [None] * bracket_size
     idx = 0
 
-    # Размещаем участников
-    for _, members in sorted_clubs:
-        for member in members:
-            if idx < len(positions):
-                bracket[positions[idx]] = member
-                idx += 1
+    # Размещаем участников по принципу "один участник от каждого тренера за раз"
+    # Сначала определяем максимальное количество участников у одного тренера
+    max_coach_size = 0
+    for club_data in clubs.values():
+        for coach_list in club_data.values():
+            max_coach_size = max(max_coach_size, len(coach_list))
 
-    # Исправляем коллизии (одинаковые клубы в одном матче)
+    # Размещаем по одному участнику от каждого тренера по очереди
+    for round_num in range(max_coach_size):
+        for club, coaches in sorted_clubs:
+            for coach_name, members in sorted(coaches.items()):
+                if round_num < len(members) and idx < len(positions):
+                    bracket[positions[idx]] = members[round_num]
+                    idx += 1
+
+    # Исправляем коллизии (одинаковые клубы и тренеры в одном матче)
     for i in range(0, bracket_size, 2):
         if i + 1 < bracket_size:
             p1, p2 = bracket[i], bracket[i + 1]
-            if p1 and p2 and p1.club == p2.club:
-                for j in range(i + 2, bracket_size):
-                    if bracket[j] and bracket[j].club != p1.club:
-                        bracket[i + 1], bracket[j] = bracket[j], bracket[i + 1]
-                        break
+            if p1 and p2:
+                # Проверяем коллизию по клубу
+                if p1.club == p2.club:
+                    # Если еще и один тренер - это критично
+                    if p1.coach == p2.coach:
+                        print(f"  Критическая коллизия: {p1.club}, тренер {p1.coach}")
+                        # Ищем замену в других позициях
+                        for j in range(i + 2, bracket_size):
+                            if bracket[j] and (bracket[j].club != p1.club or bracket[j].coach != p1.coach):
+                                bracket[i + 1], bracket[j] = bracket[j], bracket[i + 1]
+                                print(f"    Исправлено: обмен с позицией {j}")
+                                break
+                    else:
+                        # Разные тренеры в одном клубе - допустимо в более поздних раундах
+                        # Но в первом раунде лучше развести
+                        if i < 2:  # Только для первых матчей
+                            for j in range(i + 2, bracket_size):
+                                if bracket[j] and (bracket[j].club != p1.club):
+                                    bracket[i + 1], bracket[j] = bracket[j], bracket[i + 1]
+                                    break
 
     return [p for p in bracket if p is not None]
-
 
 def generate_bracket_for_category(tournament, age_category, gender, weight_category):
     """
@@ -93,8 +115,8 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
     if n < 2:
         return False
 
-    # Распределяем участников
-    participants = distribute_participants_by_club(participants)
+    # Распределяем участников с учетом клуба и тренера
+    participants = distribute_participants_by_club_and_coach(participants)
 
     # Удаляем старые матчи
     Match.objects.filter(
@@ -164,7 +186,7 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
             p_idx += 1
             match.save()
             first_round.append(match)
-            print(f"  Матч {i + 1}: {match.participant1.last_name} vs {match.participant2.last_name}")
+            print(f"  Матч {i + 1}: {match.participant1.last_name} ({match.participant1.club} - {match.participant1.coach}) vs {match.participant2.last_name} ({match.participant2.club} - {match.participant2.coach})")
         else:
             # BYE матч - только один участник автоматически проходит
             if p_idx < n:
@@ -174,7 +196,7 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
                 match.status = 'completed'
                 match.save()
                 first_round.append(match)
-                print(f"  Матч {i + 1}: {match.participant1.last_name} vs BYE (автопроход)")
+                print(f"  Матч {i + 1}: {match.participant1.last_name} ({match.participant1.club} - {match.participant1.coach}) vs BYE (автопроход)")
 
         all_matches.append(match)
         match_order += 1
@@ -283,11 +305,14 @@ def get_category_stats(tournament):
                     'weight_category': p.weight_category,
                     'count': 0,
                     'participants': [],
-                    'clubs': set()
+                    'clubs': set(),
+                    'coaches': set()
                 }
             stats[key]['count'] += 1
             stats[key]['participants'].append(p)
             stats[key]['clubs'].add(p.club)
+            if p.coach:
+                stats[key]['coaches'].add(p.coach)
 
     # Добавляем информацию о матчах
     from django.db.models import Count, Q
@@ -313,72 +338,137 @@ def get_category_stats(tournament):
     for key in stats:
         stats[key]['clubs'] = list(stats[key]['clubs'])
         stats[key]['unique_clubs'] = len(stats[key]['clubs'])
+        stats[key]['coaches'] = list(stats[key]['coaches'])
+        stats[key]['unique_coaches'] = len(stats[key]['coaches'])
 
     return stats
 
 
 def process_excel_file(excel_file, tournament, clear_existing=False):
-    """Обработка Excel файла"""
+    """
+    Обработка Excel файла с участниками в формате:
+    Фамилия | Имя | Дата рождения | Пол | Возраст | Квалификация | Дисциплина | Вес | Клуб | Тренер
+    """
     import pandas as pd
     from datetime import datetime
+    import re
 
     try:
         df = pd.read_excel(excel_file)
 
-        required = ['Фамилия', 'Имя', 'Дата рождения', 'Пол', 'Вес', 'Клуб']
+        # Проверяем наличие необходимых колонок
+        required = ['Фамилия', 'Имя', 'Дата рождения', 'Пол', 'Клуб']
         missing = [c for c in required if c not in df.columns]
         if missing:
-            return {'success': False, 'error': f'Нет колонок: {missing}'}
+            return {'success': False, 'error': f'Отсутствуют колонки: {missing}'}
 
         if clear_existing:
             Participant.objects.filter(tournament=tournament).delete()
 
         imported = 0
         errors = []
+        skipped = 0
 
         for idx, row in df.iterrows():
             try:
-                # Дата
-                bd = row['Дата рождения']
-                if isinstance(bd, str):
-                    try:
-                        birth = datetime.strptime(bd, '%d.%m.%Y').date()
-                    except:
-                        birth = datetime.strptime(bd, '%Y-%m-%d').date()
-                elif isinstance(bd, pd.Timestamp):
-                    birth = bd.date()
-                else:
+                # Проверяем, что строка не пустая
+                if pd.isna(row['Фамилия']) or pd.isna(row['Имя']):
+                    skipped += 1
                     continue
 
-                # Пол
-                g = str(row['Пол']).upper().strip()
-                gender = 'M' if g in ['М', 'M', 'МУЖ', 'МУЖСКОЙ'] else 'F'
+                # Обработка даты рождения
+                birth_date = None
+                if pd.notna(row['Дата рождения']):
+                    bd = row['Дата рождения']
+                    if isinstance(bd, str):
+                        try:
+                            birth_date = datetime.strptime(bd, '%Y-%m-%d').date()
+                        except:
+                            try:
+                                birth_date = datetime.strptime(bd, '%d.%m.%Y').date()
+                            except:
+                                birth_date = datetime.strptime(bd, '%d.%m.%y').date()
+                    elif isinstance(bd, pd.Timestamp):
+                        birth_date = bd.date()
+                    elif isinstance(bd, (int, float)):
+                        # Если дата в формате Excel (число дней)
+                        from datetime import datetime as dt
+                        birth_date = dt.fromordinal(dt(1900, 1, 1).toordinal() + int(bd) - 2).date()
 
-                # Клуб
-                club = str(row['Клуб']).strip()
+                # Если дата не определена, используем текущую (но лучше пропустить)
+                if not birth_date:
+                    skipped += 1
+                    errors.append(f'Строка {idx + 2}: Не удалось определить дату рождения')
+                    continue
 
-                # Вес
-                weight = float(row['Вес']) if isinstance(row['Вес'], (int, float)) else float(
-                    str(row['Вес']).replace(',', '.'))
+                # Обработка пола
+                gender = 'M'
+                if pd.notna(row['Пол']):
+                    g = str(row['Пол']).upper().strip()
+                    if g in ['Ж', 'F', 'ЖЕН', 'FEMALE', 'ЖЕНСКИЙ', 'ЖЕНЩИНА']:
+                        gender = 'F'
 
-                Participant.objects.create(
+                # Обработка веса - важное поле для определения категории
+                weight = None
+                weight_col = 'Вес' if 'Вес' in df.columns else None
+
+                if weight_col and pd.notna(row[weight_col]):
+                    weight_str = str(row[weight_col]).strip()
+                    # Заменяем запятые на точки и удаляем лишние символы
+                    weight_str = re.sub(r'[^\d.,-]', '', weight_str)
+                    weight_str = weight_str.replace(',', '.')
+
+                    try:
+                        # Извлекаем первое число из строки
+                        numbers = re.findall(r'\d+\.?\d*', weight_str)
+                        if numbers:
+                            weight = float(numbers[0])
+                        else:
+                            weight = float(weight_str) if weight_str else None
+                    except:
+                        weight = None
+
+                # Если вес не указан, пропускаем (не можем определить категорию)
+                if not weight or weight <= 0:
+                    skipped += 1
+                    errors.append(f'Строка {idx + 2}: Не указан вес или некорректное значение')
+                    continue
+
+                # Обработка клуба
+                club = 'ШКК РТ (Казань)'  # Значение по умолчанию
+                if 'Клуб' in df.columns and pd.notna(row['Клуб']):
+                    club = str(row['Клуб']).strip()
+
+                # Обработка тренера (важно для распределения)
+                coach = ''
+                if 'Тренер' in df.columns and pd.notna(row['Тренер']):
+                    coach = str(row['Тренер']).strip()
+
+                # Создаем участника
+                participant = Participant(
                     tournament=tournament,
                     last_name=str(row['Фамилия']).strip(),
                     first_name=str(row['Имя']).strip(),
-                    birth_date=birth,
+                    birth_date=birth_date,
                     gender=gender,
                     weight=weight,
                     club=club,
-                    coach=str(row.get('Тренер', '')).strip() if pd.notna(row.get('Тренер')) else '',
+                    coach=coach,
                     source_file=excel_file.name,
                     row_number=idx + 2
                 )
+                participant.save()  # При сохранении автоматически определятся категории
                 imported += 1
 
             except Exception as e:
                 errors.append(f'Строка {idx + 2}: {str(e)}')
 
-        return {'success': True, 'imported': imported, 'errors': errors}
+        return {
+            'success': True,
+            'imported': imported,
+            'skipped': skipped,
+            'errors': errors
+        }
 
     except Exception as e:
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': f'Ошибка при чтении файла: {str(e)}'}

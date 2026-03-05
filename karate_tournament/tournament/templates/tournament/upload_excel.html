@@ -99,7 +99,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Чекбокс удаления -->
                     <div class="mb-4">
                         <div class="form-check">
                             {{ form.clear_existing }}
@@ -136,32 +135,83 @@
                                 <th class="fw-normal small">Имя</th>
                                 <th class="fw-normal small">Дата рождения</th>
                                 <th class="fw-normal small">Пол</th>
+                                <th class="fw-normal small">Возраст*</th>
+                                <th class="fw-normal small">Квалификация*</th>
+                                <th class="fw-normal small">Дисциплина*</th>
                                 <th class="fw-normal small">Вес</th>
                                 <th class="fw-normal small">Клуб</th>
                                 <th class="fw-normal small">Тренер</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for row in example_data %}
                             <tr>
-                                {% for cell in row %}
-                                <td class="small text-secondary">{{ cell }}</td>
-                                {% endfor %}
+                                <td class="small text-secondary">Гусманов</td>
+                                <td class="small text-secondary">Рамазан</td>
+                                <td class="small text-secondary">2016-03-09</td>
+                                <td class="small text-secondary">М</td>
+                                <td class="small text-secondary">9</td>
+                                <td class="small text-secondary">9 Кю</td>
+                                <td class="small text-secondary">Кумитэ</td>
+                                <td class="small text-secondary">35.9</td>
+                                <td class="small text-secondary">ШКК РТ (Казань)</td>
+                                <td class="small text-secondary">Фатхуллин М.А.</td>
                             </tr>
-                            {% endfor %}
+                            <tr>
+                                <td class="small text-secondary">Дементьева</td>
+                                <td class="small text-secondary">Ева</td>
+                                <td class="small text-secondary">2010-05-18</td>
+                                <td class="small text-secondary">Ж</td>
+                                <td class="small text-secondary">15</td>
+                                <td class="small text-secondary">8 кю</td>
+                                <td class="small text-secondary">Кумитэ</td>
+                                <td class="small text-secondary">50</td>
+                                <td class="small text-secondary">ШКК РТ (Казань)</td>
+                                <td class="small text-secondary">Илюшин С.Н.</td>
+                            </tr>
+                            <tr>
+                                <td class="small text-secondary">Аглямова</td>
+                                <td class="small text-secondary">Зарина</td>
+                                <td class="small text-secondary">2018-04-02</td>
+                                <td class="small text-secondary">Ж</td>
+                                <td class="small text-secondary">7</td>
+                                <td class="small text-secondary">9 Кю</td>
+                                <td class="small text-secondary">Ката</td>
+                                <td class="small text-secondary">25.35</td>
+                                <td class="small text-secondary">ШКК РТ (Казань)</td>
+                                <td class="small text-secondary">Качурин Е.В.</td>
+                            </tr>
+                            <tr>
+                                <td class="small text-secondary">Большаков</td>
+                                <td class="small text-secondary">Артем</td>
+                                <td class="small text-secondary">2016-08-14</td>
+                                <td class="small text-secondary">М</td>
+                                <td class="small text-secondary">9</td>
+                                <td class="small text-secondary">8 Кю</td>
+                                <td class="small text-secondary">Кумитэ</td>
+                                <td class="small text-secondary">25.1</td>
+                                <td class="small text-secondary">ШКК РТ (Альметьевск)</td>
+                                <td class="small text-secondary">Шерниязов Р.Д.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-                <p class="small text-secondary mt-2">
-                    <i class="bi bi-dash text-danger me-1"></i>
-                    <span class="opacity-75">Колонка "Тренер" необязательна</span>
-                </p>
+
+                <!-- Пояснения -->
+                <div class="mt-3 small text-secondary">
+                    <p class="mb-1">
+                        <i class="bi bi-asterisk text-danger me-1" style="font-size: 0.7rem;"></i>
+                        <span class="opacity-75">Возраст, Квалификация и Дисциплина — информационные поля (необязательны для заполнения)</span>
+                    </p>
+                    <p class="mb-0">
+                        <i class="bi bi-dash text-danger me-1"></i>
+                        <span class="opacity-75">Остальные колонки обязательны для заполнения</span>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- JavaScript для красивой загрузки -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('fileInput');
@@ -237,45 +287,10 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Пожалуйста, выберите файл для загрузки');
             return;
         }
-
-        // Если используете AJAX загрузку, раскомментируйте код ниже
-        /*
-        e.preventDefault();
-
-        const formData = new FormData(form);
-        const xhr = new XMLHttpRequest();
-
-        uploadProgress.classList.remove('d-none');
-        submitBtn.disabled = true;
-
-        xhr.upload.addEventListener('progress', function(e) {
-            if (e.lengthComputable) {
-                const percentComplete = (e.loaded / e.total) * 100;
-                progressBar.style.width = percentComplete + '%';
-                progressBar.setAttribute('aria-valuenow', percentComplete);
-                progressPercent.textContent = Math.round(percentComplete) + '%';
-            }
-        });
-
-        xhr.addEventListener('load', function() {
-            if (xhr.status === 200) {
-                window.location.href = "{% url 'participant_list' tournament.id %}";
-            } else {
-                alert('Ошибка при загрузке файла');
-                uploadProgress.classList.add('d-none');
-                submitBtn.disabled = false;
-            }
-        });
-
-        xhr.open('POST', form.action, true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.send(formData);
-        */
     });
 });
 </script>
 
-<!-- Добавляем стили -->
 <style>
 .file-upload-area {
     transition: all 0.3s ease;
@@ -325,6 +340,19 @@ document.addEventListener('DOMContentLoaded', function() {
 .file-upload-area.border-danger {
     border-width: 2px !important;
     border-style: dashed !important;
+}
+
+.table {
+    font-size: 0.85rem;
+}
+
+.table th {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.table td {
+    white-space: nowrap;
 }
 </style>
 {% endblock %}
