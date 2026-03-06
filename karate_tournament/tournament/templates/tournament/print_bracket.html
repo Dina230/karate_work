@@ -10,17 +10,18 @@
             margin: 20px;
             padding: 0;
             background: white;
+            color: #333;
         }
         .header {
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #333;
+            border-bottom: 2px solid #800000;
         }
         .header h1 {
             margin: 0;
             font-size: 24px;
-            color: #333;
+            color: #800000;
         }
         .header h2 {
             margin: 10px 0 0;
@@ -41,14 +42,15 @@
             padding: 20px 0;
         }
         .bracket-round {
-            min-width: 280px;
+            min-width: 300px;
         }
         .bracket-round h3 {
             text-align: center;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #007bff;
-            color: #007bff;
+            border-bottom: 2px solid #800000;
+            color: #800000;
+            font-size: 18px;
         }
         .bracket-match {
             border: 2px solid #ddd;
@@ -57,38 +59,78 @@
             margin-bottom: 25px;
             background: #f9f9f9;
             page-break-inside: avoid;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .participant {
-            padding: 8px;
-            margin: 5px 0;
+            padding: 10px;
+            margin: 8px 0;
             background: white;
-            border-radius: 4px;
+            border-radius: 6px;
             border: 1px solid #eee;
+            position: relative;
         }
         .participant.winner {
-            background: #d4edda;
+            background: #e6f7e6;
+            border-left: 4px solid #28a745;
             border-color: #c3e6cb;
             font-weight: bold;
         }
+        .participant .name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
         .participant .club {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
-            margin-top: 3px;
+            margin-bottom: 3px;
+        }
+        .participant .coach {
+            font-size: 10px;
+            color: #888;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .participant .coach i {
+            color: #800000;
+            font-style: normal;
+        }
+        .participant .weight {
+            font-size: 10px;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+        .participant .weight i {
+            color: #3498db;
+            font-style: normal;
         }
         .score {
-            float: right;
+            position: absolute;
+            top: 10px;
+            right: 10px;
             font-weight: bold;
-            background: #007bff;
+            background: #800000;
             color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 14px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
         .match-status {
             text-align: center;
-            margin-top: 10px;
-            font-size: 12px;
+            margin-top: 12px;
+            font-size: 11px;
             color: #666;
+            border-top: 1px dashed #ddd;
+            padding-top: 8px;
+        }
+        .match-status strong {
+            color: #800000;
         }
         .footer {
             margin-top: 50px;
@@ -102,17 +144,47 @@
             display: block;
             width: 200px;
             margin: 20px auto;
-            padding: 10px;
-            background: #007bff;
+            padding: 12px;
+            background: #800000;
             color: white;
             text-align: center;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 30px;
             border: none;
             cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(128,0,0,0.3);
         }
         .print-button:hover {
-            background: #0056b3;
+            background: #660000;
+        }
+        .info-icon {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            background: #800000;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            text-align: center;
+            line-height: 14px;
+            margin-right: 4px;
+        }
+        .bye-match {
+            background: #e3f2fd;
+            border: 1px dashed #3498db;
+        }
+        .bye-match .participant {
+            background: #f0f8ff;
+        }
+        .bye-indicator {
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            display: inline-block;
+            margin-top: 5px;
         }
         @media print {
             .print-button {
@@ -121,9 +193,13 @@
             body {
                 margin: 0;
                 padding: 10px;
+                font-size: 12px;
             }
             .bracket-container {
                 gap: 20px;
+            }
+            .bracket-match {
+                break-inside: avoid;
             }
         }
     </style>
@@ -135,7 +211,7 @@
     </div>
 
     <div class="tournament-info">
-        <p>Дата: {{ tournament.date }} | Место: {{ tournament.location }}</p>
+        <p>📅 Дата: {{ tournament.date }} | 📍 Место: {{ tournament.location }}</p>
     </div>
 
     <button class="print-button" onclick="window.print()">🖨️ Распечатать</button>
@@ -152,18 +228,29 @@
             </h3>
 
             {% for match in matches %}
-            <div class="bracket-match">
+            <div class="bracket-match {% if not match.participant1 or not match.participant2 %}bye-match{% endif %}">
                 <!-- Участник 1 -->
                 <div class="participant {% if match.winner == match.participant1 %}winner{% endif %}">
                     <div>
                         {% if match.participant1 %}
-                            <strong>{{ match.participant1.last_name }} {{ match.participant1.first_name }}</strong>
-                            <div class="club">{{ match.participant1.club }}</div>
+                            <div class="name">{{ match.participant1.last_name }} {{ match.participant1.first_name }}</div>
+                            <div class="club">🏛️ {{ match.participant1.club }}</div>
+                            {% if match.participant1.coach %}
+                            <div class="coach">
+                                <i class="info-icon">👤</i> {{ match.participant1.coach }}
+                            </div>
+                            {% endif %}
+                            <div class="weight">
+                                <i class="info-icon">⚖️</i> {{ match.participant1.weight }} кг
+                            </div>
                             {% if match.status == 'completed' %}
                                 <span class="score">{{ match.score_p1 }}</span>
                             {% endif %}
                         {% else %}
-                            <em>Ожидание победителя</em>
+                            <div class="name">
+                                <span class="bye-indicator">BYE</span>
+                            </div>
+                            <div class="club">Автоматический проход</div>
                         {% endif %}
                     </div>
                 </div>
@@ -172,20 +259,31 @@
                 <div class="participant {% if match.winner == match.participant2 %}winner{% endif %}">
                     <div>
                         {% if match.participant2 %}
-                            <strong>{{ match.participant2.last_name }} {{ match.participant2.first_name }}</strong>
+                            <div class="name">{{ match.participant2.last_name }} {{ match.participant2.first_name }}</div>
                             <div class="club">{{ match.participant2.club }}</div>
+                            {% if match.participant2.coach %}
+                            <div class="coach">
+                                <i class="info-icon">👤</i> {{ match.participant2.coach }}
+                            </div>
+                            {% endif %}
+                            <div class="weight">
+                                <i class="info-icon"></i> {{ match.participant2.weight }} кг
+                            </div>
                             {% if match.status == 'completed' %}
                                 <span class="score">{{ match.score_p2 }}</span>
                             {% endif %}
                         {% else %}
-                            <em>Ожидание победителя</em>
+                            <div class="name">
+                                <span class="bye-indicator">BYE</span>
+                            </div>
+                            <div class="club">Автоматический проход</div>
                         {% endif %}
                     </div>
                 </div>
 
                 <!-- Статус матча -->
                 <div class="match-status">
-                    Статус:
+                    <strong>Статус:</strong>
                     {% if match.status == 'completed' %}
                         Завершен
                     {% elif match.status == 'walkover' %}
@@ -203,8 +301,9 @@
     </div>
 
     <div class="footer">
-        <p>© 2026 РОО «Школа Каратэ  Республики Татарстан»</p>
-        <p>г.Казань, пр-кт Ибрагимова, д.44 Спортивный Комплекс «Батыр»</p>
+        <p>© 2026 РОО «Школа Карате Республики Татарстан»</p>
+        <p>г. Альметьевск, пр-кт Строителей, Спортивный Комплекс «Батыр»</p>
+        <p style="font-size: 10px; margin-top: 10px;"> Вес | Тренер | Клуб</p>
     </div>
 
     <script>
