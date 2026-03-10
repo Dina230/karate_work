@@ -1,0 +1,298 @@
+{% extends 'tournament/base.html' %}
+
+{% block title %}Абсолютная категория - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Навигация -->
+        <div class="d-flex align-items-center mb-3">
+            <a href="{% url 'category_list' tournament.id %}" class="btn btn-outline-secondary btn-sm me-3">
+                <i class="bi bi-arrow-left"></i> Назад к категориям
+            </a>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none text-secondary">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'category_list' tournament.id %}" class="text-decoration-none text-secondary">Категории</a></li>
+                    <li class="breadcrumb-item active text-warning" aria-current="page">Абсолютная категория</li>
+                </ol>
+            </nav>
+        </div>
+
+        <!-- Заголовок -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-400 mb-1">
+                    <i class="bi bi-star-fill text-warning me-2"></i>
+                    Абсолютная категория
+                </h1>
+                <p class="text-muted small mb-0">{{ tournament.name }}</p>
+            </div>
+            <div>
+                <a href="{% url 'print_absolute_bracket' tournament.id %}" class="btn btn-outline-primary btn-sm me-2" target="_blank">
+                    <i class="bi bi-printer"></i> Печать
+                </a>
+                <a href="{% url 'clear_absolute_matches' tournament.id %}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-eraser"></i> Очистить
+                </a>
+            </div>
+        </div>
+
+        <!-- Информация об абсолютной категории -->
+        <div class="card mb-4 border-warning">
+            <div class="card-header bg-warning text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Информация
+                    </h5>
+                    <span class="badge bg-white text-warning">{{ absolute_data.count }} участников</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">В абсолютную категорию попадают участники из малочисленных весовых категорий (менее 2 человек):</p>
+                
+                {% if absolute_data.small_categories %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Возрастная категория</th>
+                                <th>Пол</th>
+                                <th>Весовая категория</th>
+                                <th>Кол-во</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in absolute_data.small_categories %}
+                            <tr>
+                                <td>{{ cat.age_category }}</td>
+                                <td>{{ cat.gender }}</td>
+                                <td>{{ cat.weight_category }}</td>
+                                <td><span class="badge bg-secondary">{{ cat.count }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Кнопка генерации -->
+        {% if not rounds and absolute_data.count >= 2 %}
+        <div class="card mb-4">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-star fs-1 mb-3 text-warning"></i>
+                <h4 class="fw-400 mb-2">Турнирная сетка не создана</h4>
+                <p class="text-muted mb-4">
+                    В абсолютной категории {{ absolute_data.count }} участников
+                </p>
+                <form method="post" action="{% url 'generate_absolute_bracket' tournament.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-lightning-charge"></i> Сгенерировать абсолютную сетку
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Список участников -->
+        {% if absolute_data.participants %}
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Участники абсолютной категории</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for p in absolute_data.participants %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ p.last_name }} {{ p.first_name }}</h6>
+                                <p class="card-text small mb-1">
+                                    <i class="bi bi-building me-1"></i> {{ p.club }}
+                                </p>
+                                <p class="card-text small mb-1">
+                                    <i class="bi bi-tag me-1"></i> {{ p.age_category }} / {{ p.weight_category }}
+                                </p>
+                                <p class="card-text small mb-1">
+                                    <i class="bi bi-speedometer2 me-1"></i> {{ p.weight }} кг
+                                </p>
+                                {% if p.coach %}
+                                <p class="card-text small">
+                                    <i class="bi bi-person-badge me-1"></i> {{ p.coach }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Турнирная сетка -->
+        {% if rounds %}
+        <h4 class="mb-3">Турнирная сетка</h4>
+        <div class="bracket-container">
+            {% for round_num, matches in rounds %}
+            <div class="bracket-round">
+                <h5>
+                    {{ matches.0.round_name }}
+                    {% if round_num == rounds|length %}
+                        <span class="badge bg-warning text-white">Финал</span>
+                    {% endif %}
+                </h5>
+
+                {% for match in matches %}
+                <div class="bracket-match">
+                    <!-- Участник 1 -->
+                    <div class="participant-item {% if match.winner == match.participant1 %}winner{% endif %} {% if not match.participant1 %}bye-item{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                {% if match.participant1 %}
+                                    <div class="fw-500">{{ match.participant1.last_name }} {{ match.participant1.first_name }}</div>
+                                    <div class="small text-muted">{{ match.participant1.club }}</div>
+                                    <div class="small text-muted">
+                                        <i class="bi bi-tag me-1"></i>{{ match.participant1.age_category }} / {{ match.participant1.weight_category }}
+                                    </div>
+                                    {% if match.participant1.coach %}
+                                    <div class="small text-muted">
+                                        <i class="bi bi-person-badge me-1"></i>{{ match.participant1.coach }}
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-skip-forward me-2"></i>
+                                        <span>BYE</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% if match.status == 'completed' and match.participant1 %}
+                                <span class="score-badge">{{ match.score_p1 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Участник 2 -->
+                    <div class="participant-item {% if match.winner == match.participant2 %}winner{% endif %} {% if not match.participant2 %}bye-item{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                {% if match.participant2 %}
+                                    <div class="fw-500">{{ match.participant2.last_name }} {{ match.participant2.first_name }}</div>
+                                    <div class="small text-muted">{{ match.participant2.club }}</div>
+                                    <div class="small text-muted">
+                                        <i class="bi bi-tag me-1"></i>{{ match.participant2.age_category }} / {{ match.participant2.weight_category }}
+                                    </div>
+                                    {% if match.participant2.coach %}
+                                    <div class="small text-muted">
+                                        <i class="bi bi-person-badge me-1"></i>{{ match.participant2.coach }}
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-skip-forward me-2"></i>
+                                        <span>BYE</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% if match.status == 'completed' and match.participant2 %}
+                                <span class="score-badge">{{ match.score_p2 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Действия -->
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2">
+                        <span class="small text-muted">{{ match.get_status_display }}</span>
+                        <a href="{% url 'match_detail' match.id %}" class="btn btn-sm btn-outline-warning">
+                            {% if match.status == 'completed' %}
+                                <i class="bi bi-pencil"></i> Редактировать
+                            {% else %}
+                                <i class="bi bi-play"></i> Ввести результат
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.bracket-container {
+    display: flex;
+    gap: 2rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+}
+
+.bracket-round {
+    min-width: 350px;
+}
+
+.bracket-round h5 {
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #ffc107;
+    color: #856404;
+}
+
+.bracket-match {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ffeeba;
+    transition: all 0.2s;
+}
+
+.bracket-match:hover {
+    border-color: #ffc107;
+    box-shadow: 0 2px 8px rgba(255,193,7,0.2);
+}
+
+.participant-item {
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.participant-item.winner {
+    background: #fff3cd;
+    border-left: 3px solid #ffc107;
+}
+
+.bye-item {
+    background: #f8f9fa;
+    border: 1px dashed #6c757d;
+    color: #6c757d;
+}
+
+.score-badge {
+    background: #ffc107;
+    color: #856404;
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.btn-outline-warning {
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: white;
+}
+</style>
+{% endblock %}

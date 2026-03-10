@@ -8,7 +8,13 @@ import pandas as pd
 
 from .models import Tournament, Participant, Match
 from .forms import ParticipantForm, MatchResultForm, ExcelUploadForm, TournamentForm
-from .utils import get_unique_categories, generate_bracket_for_category, get_category_stats, process_excel_file
+from .utils import (
+    get_unique_categories,
+    generate_bracket_for_category,
+    get_category_stats,
+    process_excel_file,
+    get_absolute_participants
+)
 
 
 def index(request):
@@ -24,7 +30,6 @@ def index(request):
     # Подсчет категорий (уникальные комбинации возраст+вес)
     total_categories = 0
     if first_tournament:
-        from .utils import get_unique_categories
         total_categories = len(get_unique_categories(first_tournament))
 
     context = {
@@ -36,7 +41,7 @@ def index(request):
     return render(request, 'tournament/index.html', context)
 
 
-def add_tournament(request):
+def add_tournament(request, tournament_id=None):
     """Добавление нового турнира"""
     if request.method == 'POST':
         form = TournamentForm(request.POST)
@@ -82,7 +87,7 @@ def register_participant(request, tournament_id):
         if form.is_valid():
             participant = form.save(commit=False)
             participant.tournament = tournament
-            participant.save()  # При сохранении автоматически определятся категории
+            participant.save()
 
             messages.success(request,
                              f'Участник {participant.last_name} {participant.first_name} успешно зарегистрирован!')
@@ -164,34 +169,15 @@ def category_list(request, tournament_id):
     # Получаем все категории
     all_stats = get_category_stats(tournament)
 
-    # Добавляем информацию о матчах в stats
-    from django.db.models import Count, Q
-    for key, data in all_stats.items():
-        age = data['age_category']
-        gender = data['gender_code']
-        weight = data['weight_category']
-
-        # Получаем матчи для этой категории
-        matches = Match.objects.filter(
-            tournament=tournament,
-            age_category=age,
-            gender=gender,
-            weight_category=weight
-        )
-
-        # Считаем статистику по матчам
-        data['total_matches'] = matches.count()
-        data['completed_matches'] = matches.filter(status='completed').count()
-        data['pending_matches'] = matches.filter(status__in=['scheduled', 'in_progress']).count()
-        data['has_matches'] = data['total_matches'] > 0
-        data['all_matches_completed'] = data['total_matches'] > 0 and data['completed_matches'] == data['total_matches']
+    # Получаем данные для абсолютной категории
+    absolute_participants = get_absolute_participants(tournament)
 
     # Фильтры
     age_filter = request.GET.get('age')
     weight_filter = request.GET.get('weight')
     gender_filter = request.GET.get('gender')
-    status_filter = request.GET.get('status')  # статус участников (ready/not_ready)
-    match_status_filter = request.GET.get('match_status')  # статус матчей (completed/not_completed)
+    status_filter = request.GET.get('status')
+    match_status_filter = request.GET.get('match_status')
 
     # Фильтруем категории
     filtered_stats = {}
@@ -208,8 +194,6 @@ def category_list(request, tournament_id):
             include = False
         if status_filter == 'not_ready' and data['count'] >= 2:
             include = False
-
-        # Фильтр по статусу матчей
         if match_status_filter == 'completed' and not data.get('all_matches_completed', False):
             include = False
         if match_status_filter == 'not_completed' and data.get('all_matches_completed', False):
@@ -237,7 +221,7 @@ def category_list(request, tournament_id):
     # Преобразуем stats в список для пагинации
     stats_items = list(filtered_stats.items())
 
-    # Пагинация (9 категорий на страницу - 3 ряда по 3 колонки)
+    # Пагинация (9 категорий на страницу)
     paginator = Paginator(stats_items, 9)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -255,8 +239,128 @@ def category_list(request, tournament_id):
         'selected_gender': gender_filter,
         'selected_status': status_filter,
         'selected_match_status': match_status_filter,
+        'absolute_participants': absolute_participants,
     }
     return render(request, 'tournament/category_list.html', context)
+
+
+def absolute_category(request, tournament_id):
+    """Абсолютная категория (участники из малочисленных весовых категорий)"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+
+    absolute_data = get_absolute_participants(tournament)
+
+    # Получаем матчи для абсолютной категории
+    matches = Match.objects.filter(
+        tournament=tournament,
+        age_category='АБСОЛЮТНАЯ',
+        gender='A',
+        weight_category='категория'
+    ).order_by('round_number', 'match_order')
+
+    # Группируем по раундам
+    rounds = {}
+    for match in matches:
+        if match.round_number not in rounds:
+            rounds[match.round_number] = []
+        rounds[match.round_number].append(match)
+
+    context = {
+        'tournament': tournament,
+        'absolute_data': absolute_data,
+        'rounds': sorted(rounds.items()),
+    }
+    return render(request, 'tournament/absolute_category.html', context)
+
+
+def generate_absolute_bracket(request, tournament_id):
+    """Генерация сетки для абсолютной категории"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+
+    if request.method == 'POST':
+        absolute_data = get_absolute_participants(tournament)
+        participants = absolute_data['participants']
+
+        if len(participants) < 2:
+            messages.error(request, 'Недостаточно участников для абсолютной категории (минимум 2)')
+            return redirect('category_list', tournament_id=tournament.id)
+
+        # Удаляем старые матчи
+        Match.objects.filter(
+            tournament=tournament,
+            age_category='АБСОЛЮТНАЯ',
+            gender='A',
+            weight_category='категория'
+        ).delete()
+
+        # Генерируем сетку
+        success = generate_bracket_for_category(
+            tournament,
+            'АБСОЛЮТНАЯ',
+            'A',
+            'категория',
+            is_absolute=True,
+            participants=participants
+        )
+
+        if success:
+            messages.success(request,
+                             f'Турнирная сетка для абсолютной категории создана! ({len(participants)} участников)')
+        else:
+            messages.error(request, 'Не удалось создать сетку.')
+
+        return redirect('absolute_category', tournament_id=tournament.id)
+
+    return redirect('category_list', tournament_id=tournament.id)
+
+
+def clear_absolute_matches(request, tournament_id):
+    """Очистка матчей в абсолютной категории"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+
+    if request.method == 'POST':
+        Match.objects.filter(
+            tournament=tournament,
+            age_category='АБСОЛЮТНАЯ',
+            gender='A',
+            weight_category='категория'
+        ).delete()
+
+        messages.success(request, f'Все матчи в абсолютной категории удалены')
+        return redirect('category_list', tournament_id=tournament.id)
+
+    context = {
+        'tournament': tournament,
+    }
+    return render(request, 'tournament/clear_absolute.html', context)
+
+
+def print_absolute_bracket(request, tournament_id):
+    """Версия для печати абсолютной категории"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+
+    matches = Match.objects.filter(
+        tournament=tournament,
+        age_category='АБСОЛЮТНАЯ',
+        gender='A',
+        weight_category='категория'
+    ).order_by('round_number', 'match_order')
+
+    rounds = {}
+    for match in matches:
+        if match.round_number not in rounds:
+            rounds[match.round_number] = []
+        rounds[match.round_number].append(match)
+
+    context = {
+        'tournament': tournament,
+        'age_category': 'Абсолютная категория',
+        'gender_display': 'Все',
+        'weight_category': 'все веса',
+        'rounds': sorted(rounds.items()),
+        'print_mode': True,
+    }
+    return render(request, 'tournament/print_absolute_bracket.html', context)
 
 
 def generate_all_brackets(request, tournament_id):
@@ -268,12 +372,28 @@ def generate_all_brackets(request, tournament_id):
         generated = 0
         skipped = 0
 
+        # Генерируем сетки для обычных категорий
         for age_category, gender, weight_category in categories:
             success = generate_bracket_for_category(tournament, age_category, gender, weight_category)
             if success:
                 generated += 1
             else:
                 skipped += 1
+
+        # Пробуем сгенерировать абсолютную категорию
+        absolute_data = get_absolute_participants(tournament)
+        if absolute_data['count'] >= 2:
+            absolute_success = generate_bracket_for_category(
+                tournament,
+                'АБСОЛЮТНАЯ',
+                'A',
+                'категория',
+                is_absolute=True,
+                participants=absolute_data['participants']
+            )
+            if absolute_success:
+                generated += 1
+                messages.info(request, f'Абсолютная категория создана ({absolute_data["count"]} участников)')
 
         messages.success(request, f'Создано сеток: {generated}, пропущено (мало участников): {skipped}')
         return redirect('category_list', tournament_id=tournament.id)
@@ -282,6 +402,9 @@ def generate_all_brackets(request, tournament_id):
     categories = get_unique_categories(tournament)
     ready_categories = 0
     stats = get_category_stats(tournament)
+
+    # Получаем данные для абсолютной категории
+    absolute_data = get_absolute_participants(tournament)
 
     # Считаем готовые категории
     for age_category, gender, weight_category in categories:
@@ -299,6 +422,7 @@ def generate_all_brackets(request, tournament_id):
         'total_categories': len(categories),
         'ready_categories': ready_categories,
         'stats': stats,
+        'absolute_participants': absolute_data,
     }
     return render(request, 'tournament/generate_all_brackets.html', context)
 
@@ -328,7 +452,6 @@ def generate_bracket_for_category_view(request, tournament_id, age_category, gen
                         gender=gender,
                         weight_category=weight_category)
 
-    # Если GET запрос, просто показываем страницу категории
     return redirect('category_bracket',
                     tournament_id=tournament.id,
                     age_category=age_category,
@@ -373,7 +496,7 @@ def category_bracket(request, tournament_id, age_category, gender, weight_catego
     # Определяем пол для отображения
     gender_display = 'Мужчины' if gender_code == 'M' else 'Женщины'
 
-    # Группируем участников по клубам вручную
+    # Группируем участников по клубам
     participants_by_club = {}
     unique_clubs = set()
 
@@ -409,21 +532,19 @@ def category_bracket(request, tournament_id, age_category, gender, weight_catego
 
 
 def match_detail(request, match_id):
-    """Детали матча и ввод результатов с обработкой боя за 3 место и неявок"""
+    """Детали матча и ввод результатов"""
     match = get_object_or_404(Match, id=match_id)
 
     if request.method == 'POST':
         form = MatchResultForm(request.POST, instance=match)
         if form.is_valid():
-            # Сохраняем данные до обновления
             winner = form.cleaned_data.get('winner')
             status = form.cleaned_data.get('status')
 
             match = form.save()
 
-            # Обработка завершенного матча или неявки
             if status in ['completed', 'walkover'] and winner:
-                # Автоматически заполняем следующий матч
+                # Заполняем следующий матч
                 if match.next_match:
                     if not match.next_match.participant1:
                         match.next_match.participant1 = winner
@@ -434,11 +555,7 @@ def match_detail(request, match_id):
 
                 # Обработка боя за 3 место (полуфиналы)
                 if match.round_name == "1/2" and hasattr(match, 'third_place_match') and match.third_place_match:
-                    # Определяем проигравшего
-                    if winner == match.participant1:
-                        loser = match.participant2
-                    else:
-                        loser = match.participant1
+                    loser = match.participant2 if winner == match.participant1 else match.participant1
 
                     if loser:
                         third = match.third_place_match
@@ -454,9 +571,8 @@ def match_detail(request, match_id):
                                           f'{loser.last_name} {loser.first_name} будет участвовать в бое за 3 место')
 
                 if status == 'completed':
-                    messages.success(request,
-                                     f'Результат сохранен! Победитель: {winner.last_name} {winner.first_name}')
-                else:  # walkover
+                    messages.success(request, f'Результат сохранен! Победитель: {winner.last_name} {winner.first_name}')
+                else:
                     messages.info(request,
                                   f'Зафиксирована неявка. Победитель: {winner.last_name} {winner.first_name} проходит дальше')
 
@@ -464,11 +580,16 @@ def match_detail(request, match_id):
                 messages.error(request, 'При неявке необходимо выбрать победителя!')
                 return redirect('match_detail', match_id=match.id)
 
-            return redirect('category_bracket',
-                            tournament_id=match.tournament.id,
-                            age_category=match.age_category,
-                            gender=('М' if match.gender == 'M' else 'Ж'),
-                            weight_category=match.weight_category)
+            # Определяем куда редиректить
+            if match.age_category == 'АБСОЛЮТНАЯ':
+                return redirect('absolute_category', tournament_id=match.tournament.id)
+            else:
+                gender_display = 'М' if match.gender == 'M' else 'Ж'
+                return redirect('category_bracket',
+                                tournament_id=match.tournament.id,
+                                age_category=match.age_category,
+                                gender=gender_display,
+                                weight_category=match.weight_category)
     else:
         form = MatchResultForm(instance=match)
 
@@ -521,6 +642,9 @@ def tournament_stats(request, tournament_id):
     excel_participants = participants.filter(source_file__isnull=False).count()
     manual_participants = participants.filter(source_file__isnull=True).count()
 
+    # Данные для абсолютной категории
+    absolute_data = get_absolute_participants(tournament)
+
     context = {
         'tournament': tournament,
         'stats': stats,
@@ -530,6 +654,7 @@ def tournament_stats(request, tournament_id):
         'total_clubs': len(club_stats),
         'excel_participants': excel_participants,
         'manual_participants': manual_participants,
+        'absolute_participants': absolute_data,
     }
     return render(request, 'tournament/tournament_stats.html', context)
 
@@ -553,7 +678,7 @@ def upload_excel(request, tournament_id):
                     f'Успешно импортировано участников: {result["imported"]}'
                 )
                 if result['errors']:
-                    for error in result['errors'][:5]:  # Показываем первые 5 ошибок
+                    for error in result['errors'][:5]:
                         messages.warning(request, error)
                     if len(result['errors']) > 5:
                         messages.warning(request, f'И еще {len(result["errors"]) - 5} ошибок')
@@ -564,7 +689,6 @@ def upload_excel(request, tournament_id):
     else:
         form = ExcelUploadForm()
 
-    # Получаем пример структуры
     example_data = [
         ['Иванов', 'Иван', '15.05.2010', 'М', 45.5, 'Клуб "Восток"', 'Петров А.И.'],
         ['Петрова', 'Анна', '20.08.2011', 'Ж', 38.0, 'Клуб "Самурай"', 'Сидоров В.П.'],
@@ -581,7 +705,6 @@ def upload_excel(request, tournament_id):
 
 def download_template(request, tournament_id):
     """Скачать шаблон Excel файла"""
-    # Создаем пример данных
     data = {
         'Фамилия': ['Иванов', 'Петров', 'Сидорова'],
         'Имя': ['Иван', 'Петр', 'Анна'],
@@ -594,7 +717,6 @@ def download_template(request, tournament_id):
 
     df = pd.DataFrame(data)
 
-    # Создаем HTTP ответ с Excel файлом
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="template_participants.xlsx"'
 
@@ -736,16 +858,14 @@ def print_bracket(request, tournament_id, age_category, gender, weight_category)
 
 
 def ajax_get_participants(request, tournament_id):
-    """API для получения списка участников (для AJAX запросов)"""
+    """API для получения списка участников"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
     category = request.GET.get('category', '')
 
     if category:
-        # Ожидаем формат: "age_category|gender|weight_category"
         parts = category.split('|')
         if len(parts) == 3:
             age, gen, weight = parts
-            # Преобразуем пол если нужно
             if gen == 'Ж':
                 gen = 'F'
             elif gen == 'М':

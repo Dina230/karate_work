@@ -23,7 +23,14 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/categories/', views.category_list, name='category_list'),
     path('tournament/<int:tournament_id>/generate-all/', views.generate_all_brackets, name='generate_all_brackets'),
 
-    # Просмотр конкретной категории
+    # АБСОЛЮТНАЯ КАТЕГОРИЯ (только для малочисленных)
+    path('tournament/<int:tournament_id>/absolute/', views.absolute_category, name='absolute_category'),
+    path('tournament/<int:tournament_id>/absolute/generate/', views.generate_absolute_bracket,
+         name='generate_absolute_bracket'),
+    path('tournament/<int:tournament_id>/absolute/print/', views.print_absolute_bracket, name='print_absolute_bracket'),
+    path('tournament/<int:tournament_id>/absolute/clear/', views.clear_absolute_matches, name='clear_absolute_matches'),
+
+    # Просмотр обычной категории
     path('tournament/<int:tournament_id>/bracket/<str:age_category>/<str:gender>/<str:weight_category>/',
          views.category_bracket, name='category_bracket'),
     path('tournament/<int:tournament_id>/bracket/<str:age_category>/<str:gender>/<str:weight_category>/generate/',

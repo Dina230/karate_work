@@ -1,0 +1,71 @@
+{% extends 'tournament/base.html' %}
+
+{% block title %}Абсолютные категории - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-400">Абсолютные категории</h1>
+                <p class="text-muted small">{{ tournament.name }}</p>
+                <p class="text-muted small">Участники соревнуются без весовых ограничений</p>
+            </div>
+            <a href="{% url 'category_list' tournament.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Назад к категориям
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for cat in absolute_categories %}
+            <div class="col-md-4">
+                <div class="card h-100 border-warning">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">{{ cat.age_category }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3">{{ cat.gender }}</h6>
+                        
+                        <div class="text-center p-3 bg-light rounded mb-3">
+                            <div class="fs-2 fw-light text-warning">{{ cat.count }}</div>
+                            <small class="text-secondary">участников</small>
+                        </div>
+                        
+                        {% if cat.min_weight and cat.max_weight %}
+                        <p class="small text-muted mb-2">
+                            Вес: от {{ cat.min_weight }} кг до {{ cat.max_weight }} кг
+                        </p>
+                        {% endif %}
+                        
+                        <p class="small text-muted mb-3">Без весовых категорий</p>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'absolute_category_bracket' tournament.id cat.age_category cat.gender_code %}" 
+                               class="btn btn-outline-warning">
+                                <i class="bi bi-bracket"></i> Просмотр сетки
+                            </a>
+                            <form method="post" action="{% url 'generate_absolute_bracket' tournament.id cat.age_category cat.gender_code %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-lightning-charge"></i> Сгенерировать
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-star fs-1 text-muted mb-3"></i>
+                    <h4>Нет абсолютных категорий</h4>
+                    <p class="text-muted">
+                        Для создания абсолютных категорий нужно минимум 2 участника одного пола в возрастной группе
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

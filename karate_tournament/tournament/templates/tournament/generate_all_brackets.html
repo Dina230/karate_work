@@ -19,19 +19,34 @@
                     <p>Готовы к генерации (≥2 участников): <strong>{{ ready_categories }}</strong></p>
                 </div>
 
-                {% if ready_categories > 0 %}
+                {% if absolute_categories.total_count >= 2 %}
+                <div class="alert alert-warning">
+                    <h5><i class="bi bi-star-fill"></i> Абсолютная категория:</h5>
+                    <p>{{ absolute_categories.total_count }} участников из малочисленных категорий</p>
+                </div>
+                {% endif %}
+
+                {% if ready_categories > 0 or absolute_categories.total_count >= 2 %}
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle"></i>
-                    <strong>Внимание!</strong> Генерация сеток удалит все существующие матчи в этих категориях и создаст новые со случайной жеребьевкой.
+                    <strong>Внимание!</strong> Генерация сеток удалит все существующие матчи.
                 </div>
 
-                <form method="post" onsubmit="return confirm('Вы уверены, что хотите сгенерировать все турнирные сетки? Существующие матчи будут удалены.');">
+                <form method="post" onsubmit="return confirm('Вы уверены, что хотите сгенерировать все турнирные сетки?');">
                     {% csrf_token %}
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-success btn-lg">
-                            <i class="bi bi-lightning"></i> 
-                            Сгенерировать все сетки ({{ ready_categories }} категорий)
+                            <i class="bi bi-lightning"></i>
+                            Сгенерировать все сетки
                         </button>
+
+                        {% if absolute_categories.total_count >= 2 %}
+                        <a href="{% url 'generate_absolute_bracket' tournament.id %}" class="btn btn-warning btn-lg">
+                            <i class="bi bi-star"></i>
+                            Сгенерировать только абсолютную категорию
+                        </a>
+                        {% endif %}
+
                         <a href="{% url 'category_list' tournament.id %}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Назад к категориям
                         </a>
@@ -43,81 +58,15 @@
                     <strong>Нет категорий для генерации!</strong>
                     <p class="mt-2">Для генерации сеток нужно минимум 2 участника в категории.</p>
                 </div>
-                
+
                 <div class="d-grid gap-2">
                     <a href="{% url 'category_list' tournament.id %}" class="btn btn-primary">
                         <i class="bi bi-grid"></i> Просмотреть категории
-                    </a>
-                    <a href="{% url 'upload_excel' tournament.id %}" class="btn btn-success">
-                        <i class="bi bi-file-excel"></i> Загрузить участников из Excel
                     </a>
                 </div>
                 {% endif %}
             </div>
         </div>
-
-        <!-- Список категорий -->
-        {% if total_categories > 0 %}
-        <div class="card mt-4">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0"><i class="bi bi-list"></i> Список всех категорий</h5>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Возраст</th>
-                            <th>Пол</th>
-                            <th>Весовая категория</th>
-                            <th>Участников</th>
-                            <th>Статус</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for key, data in stats.items %}
-                        <tr>
-                            <td>{{ data.age_category }}</td>
-                            <td>
-                                {% if data.gender_code == 'M' %}
-                                <span class="badge bg-info">Мужчины</span>
-                                {% else %}
-                                <span class="badge bg-success">Женщины</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ data.weight_category }}</td>
-                            <td>
-                                <span class="badge {% if data.count >= 2 %}bg-success{% else %}bg-secondary{% endif %}">
-                                    {{ data.count }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if data.count >= 2 %}
-                                <span class="text-success">
-                                    <i class="bi bi-check-circle"></i> Готова
-                                </span>
-                                {% else %}
-                                <span class="text-muted">
-                                    <i class="bi bi-dash-circle"></i> Мало участников
-                                </span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% endif %}
     </div>
 </div>
-
-<style>
-.card {
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-}
-.table td {
-    vertical-align: middle;
-}
-</style>
 {% endblock %}

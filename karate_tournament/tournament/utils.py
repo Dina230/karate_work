@@ -1,4 +1,5 @@
 import math
+import random
 from collections import defaultdict
 from .models import Participant, Match
 
@@ -13,6 +14,38 @@ def get_unique_categories(tournament):
             categories.add((p.age_category, p.gender, p.weight_category))
 
     return sorted(list(categories))
+
+
+def get_absolute_participants(tournament):
+    """
+    Получение участников для абсолютной категории
+    (только из категорий с менее чем 2 участниками)
+    """
+    # Получаем все категории
+    all_stats = get_category_stats(tournament)
+
+    absolute_participants = []
+    small_categories = []
+
+    for key, data in all_stats.items():
+        if data['count'] < 2:
+            # Это малочисленная категория
+            small_categories.append({
+                'age_category': data['age_category'],
+                'gender': data['gender'],
+                'gender_code': data['gender_code'],
+                'weight_category': data['weight_category'],
+                'count': data['count'],
+                'participants': data['participants']
+            })
+            # Добавляем участников в абсолютку
+            absolute_participants.extend(data['participants'])
+
+    return {
+        'participants': absolute_participants,
+        'count': len(absolute_participants),
+        'small_categories': small_categories
+    }
 
 
 def distribute_participants_smart(participants):
@@ -32,27 +65,21 @@ def distribute_participants_smart(participants):
         coach_key = p.coach if p.coach else "Без тренера"
         coaches[coach_key].append(p)
 
-    # Сортируем тренеров по количеству участников (от большего к меньшему)
+    # Сортируем тренеров по количеству участников
     sorted_coaches = sorted(coaches.items(), key=lambda x: len(x[1]), reverse=True)
 
-    # Стандартные позиции для олимпийской сетки (правильный посев)
+    # Стандартные позиции для олимпийской сетки
     def get_seed_positions(size):
-        """Генерирует позиции для правильного посева в олимпийской сетке"""
         if size == 2:
             return [0, 1]
-
-        positions = [0, 1]
-        current_size = 2
-
-        while current_size < size:
-            new_positions = []
-            for pos in positions:
-                new_positions.append(pos * 2)
-                new_positions.append(pos * 2 + 1)
-            positions = new_positions
-            current_size *= 2
-
-        return positions
+        elif size == 4:
+            return [0, 3, 1, 2]
+        elif size == 8:
+            return [0, 7, 3, 4, 1, 6, 2, 5]
+        elif size == 16:
+            return [0, 15, 7, 8, 3, 12, 4, 11, 1, 14, 6, 9, 2, 13, 5, 10]
+        else:
+            return list(range(size))
 
     seed_positions = get_seed_positions(bracket_size)
 
@@ -62,7 +89,6 @@ def distribute_participants_smart(participants):
     # Размещаем участников по принципу максимального разведения
     placed_count = 0
 
-    # Сначала размещаем по одному участнику от каждого тренера
     max_in_group = max(len(members) for _, members in sorted_coaches) if sorted_coaches else 0
 
     for round_num in range(max_in_group):
@@ -70,26 +96,22 @@ def distribute_participants_smart(participants):
             if round_num < len(members):
                 member = members[round_num]
 
-                # Ищем лучшую позицию для этого участника
+                # Ищем лучшую позицию
                 best_pos = None
-
                 for pos in seed_positions:
                     if bracket[pos] is not None:
                         continue
 
-                    # Проверяем, кто будет соперником в первом раунде
+                    # Проверяем соперника
                     if pos % 2 == 0:
                         opponent_pos = pos + 1
                     else:
                         opponent_pos = pos - 1
 
-                    # Проверяем соперника
                     if opponent_pos < bracket_size and bracket[opponent_pos] is not None:
                         opponent = bracket[opponent_pos]
-                        # Если соперник от того же тренера - пропускаем
                         if opponent.coach == member.coach and member.coach:
                             continue
-                        # Если соперник из того же клуба - пропускаем
                         if opponent.club == member.club:
                             continue
 
@@ -100,43 +122,42 @@ def distribute_participants_smart(participants):
                     bracket[best_pos] = member
                     placed_count += 1
 
-    # Возвращаем только заполненные позиции
     result = [p for p in bracket if p is not None]
     return result
 
 
-def generate_bracket_for_category(tournament, age_category, gender, weight_category):
+def generate_bracket_for_category(tournament, age_category, gender, weight_category, is_absolute=False,
+                                  participants=None):
     """
     Генерация олимпийской сетки для любой категории
     """
     print(f"\n{'=' * 50}")
-    print(f"Генерация сетки для: {age_category}, {gender}, {weight_category}")
+    if is_absolute:
+        print(f"Генерация АБСОЛЮТНОЙ категории")
+    else:
+        print(f"Генерация сетки для: {age_category}, {gender}, {weight_category}")
 
-    participants = list(Participant.objects.filter(
-        tournament=tournament,
-        age_category=age_category,
-        gender=gender,
-        weight_category=weight_category
-    ).order_by('last_name'))
+    # Получаем участников
+    if participants is not None:
+        participants_list = participants
+    else:
+        participants_list = list(Participant.objects.filter(
+            tournament=tournament,
+            age_category=age_category,
+            gender=gender,
+            weight_category=weight_category
+        ).order_by('last_name'))
 
-    n = len(participants)
+    n = len(participants_list)
     print(f"Участников: {n}")
 
     if n < 2:
         return False
 
-    # Удаляем старые матчи
-    Match.objects.filter(
-        tournament=tournament,
-        age_category=age_category,
-        gender=gender,
-        weight_category=weight_category
-    ).delete()
+    # Распределяем участников
+    participants_list = distribute_participants_smart(participants_list)
 
-    # Распределяем участников с учетом тренера и клуба
-    participants = distribute_participants_smart(participants)
-
-    # Определяем размер полной сетки (ближайшая степень двойки)
+    # Определяем размер полной сетки
     full_size = 2 ** math.ceil(math.log2(n))
     byes = full_size - n
 
@@ -157,84 +178,102 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
         else:
             round_names[i] = f"1/{2 ** (total_rounds - i + 1)}"
 
+    # Удаляем старые матчи
+    if is_absolute:
+        Match.objects.filter(
+            tournament=tournament,
+            age_category='АБСОЛЮТНАЯ',
+            gender='A',
+            weight_category='категория'
+        ).delete()
+        weight_cat = 'категория'
+        age_cat = 'АБСОЛЮТНАЯ'
+        gen = 'A'
+    else:
+        Match.objects.filter(
+            tournament=tournament,
+            age_category=age_category,
+            gender=gender,
+            weight_category=weight_category
+        ).delete()
+        weight_cat = weight_category
+        age_cat = age_category
+        gen = gender
+
     all_matches = []
     match_order = 0
 
-    # Создаем структуру для хранения матчей по раундам
-    rounds_matches = {i: [] for i in range(1, total_rounds + 1)}
-
     # ПЕРВЫЙ РАУНД
+    first_round = []
     matches_in_first = full_size // 2
     real_matches = (n - byes) // 2 if n > byes else 0
-    bye_matches = byes
 
     print(f"Первый раунд: {matches_in_first} матчей")
-    print(f"Реальных матчей: {real_matches}, BYE матчей: {bye_matches}")
+    print(f"Реальных матчей: {real_matches}, BYE матчей: {byes}")
 
     p_idx = 0
 
     for i in range(matches_in_first):
         match = Match(
             tournament=tournament,
-            age_category=age_category,
-            gender=gender,
-            weight_category=weight_category,
+            age_category=age_cat,
+            gender=gen,
+            weight_category=weight_cat,
             round_number=1,
             round_name=round_names[1],
             match_order=match_order
         )
 
-        if i < real_matches and p_idx + 1 < len(participants):
-            # Реальный матч с двумя участниками
-            match.participant1 = participants[p_idx]
-            match.participant2 = participants[p_idx + 1]
+        if i < real_matches and p_idx + 1 < len(participants_list):
+            # Реальный матч
+            match.participant1 = participants_list[p_idx]
+            match.participant2 = participants_list[p_idx + 1]
             p_idx += 2
             match.save()
-            rounds_matches[1].append(match)
+            first_round.append(match)
 
-            p1_name = match.participant1.last_name if match.participant1 else "TBD"
-            p2_name = match.participant2.last_name if match.participant2 else "TBD"
+            p1_name = match.participant1.last_name
+            p2_name = match.participant2.last_name
             print(f"  Матч {i + 1}: {p1_name} vs {p2_name}")
 
-        elif p_idx < len(participants):
-            # BYE матч - один участник автоматически проходит
-            match.participant1 = participants[p_idx]
+        elif p_idx < len(participants_list):
+            # BYE матч
+            match.participant1 = participants_list[p_idx]
             p_idx += 1
             match.winner = match.participant1
             match.status = 'completed'
-            match.score_p1 = 0
-            match.score_p2 = 0
             match.save()
-            rounds_matches[1].append(match)
+            first_round.append(match)
 
-            print(f"  Матч {i + 1}: {match.participant1.last_name} vs BYE (автопроход)")
+            print(f"  Матч {i + 1}: {match.participant1.last_name} vs BYE")
         else:
-            # Оба участника TBD (для полноты сетки)
             match.save()
-            rounds_matches[1].append(match)
+            first_round.append(match)
 
         all_matches.append(match)
         match_order += 1
 
     # СЛЕДУЮЩИЕ РАУНДЫ
+    current_round = first_round
+    semi_finals = []
+
     for round_num in range(2, total_rounds + 1):
-        prev_round_matches = rounds_matches[round_num - 1]
-        matches_in_round = len(prev_round_matches) // 2
+        next_round = []
+        matches_in_round = len(current_round) // 2
 
         print(f"\nРаунд {round_num} ({round_names[round_num]}): {matches_in_round} матчей")
 
         for i in range(matches_in_round):
             match = Match(
                 tournament=tournament,
-                age_category=age_category,
-                gender=gender,
-                weight_category=weight_category,
+                age_category=age_cat,
+                gender=gen,
+                weight_category=weight_cat,
                 round_number=round_num,
                 round_name=round_names[round_num],
                 match_order=match_order
             )
             match.save()
-            rounds_matches[round_num].append(match)
             all_matches.append(match)
             match_order += 1
 
@@ -242,52 +281,54 @@ def generate_bracket_for_category(tournament, age_category, gender, weight_categ
             left_idx = i * 2
             right_idx = i * 2 + 1
 
-            if left_idx < len(prev_round_matches):
-                prev_round_matches[left_idx].next_match = match
-                prev_round_matches[left_idx].save()
+            if left_idx < len(current_round):
+                current_round[left_idx].next_match = match
+                current_round[left_idx].save()
 
-                # Если предыдущий матч уже завершен (BYE), добавляем победителя
-                if prev_round_matches[left_idx].status == 'completed' and prev_round_matches[left_idx].winner:
-                    match.participant1 = prev_round_matches[left_idx].winner
-                    match.save()
-
-            if right_idx < len(prev_round_matches):
-                prev_round_matches[right_idx].next_match = match
-                prev_round_matches[right_idx].save()
-
-                # Если предыдущий матч уже завершен (BYE), добавляем победителя
-                if prev_round_matches[right_idx].status == 'completed' and prev_round_matches[right_idx].winner:
-                    if match.participant1 != prev_round_matches[right_idx].winner:
-                        match.participant2 = prev_round_matches[right_idx].winner
+                if current_round[left_idx].status == 'completed' and current_round[left_idx].winner:
+                    if not match.participant1:
+                        match.participant1 = current_round[left_idx].winner
                         match.save()
 
-            print(f"  Матч {i + 1}: создан")
+            if right_idx < len(current_round):
+                current_round[right_idx].next_match = match
+                current_round[right_idx].save()
 
-    # БОЙ ЗА 3 МЕСТО (только если есть полуфиналы - минимум 4 участника)
-    if total_rounds >= 2:
-        semi_finals = rounds_matches.get(total_rounds - 1, [])
+                if current_round[right_idx].status == 'completed' and current_round[right_idx].winner:
+                    if not match.participant2 and match.participant1 != current_round[right_idx].winner:
+                        match.participant2 = current_round[right_idx].winner
+                        match.save()
 
-        if len(semi_finals) >= 2:
-            print(f"\nСоздание боя за 3 место")
+            next_round.append(match)
 
-            third_match = Match(
-                tournament=tournament,
-                age_category=age_category,
-                gender=gender,
-                weight_category=weight_category,
-                round_number=total_rounds + 1,
-                round_name="Бой за 3 место",
-                match_order=match_order,
-                is_third_place_match=True
-            )
-            third_match.save()
-            all_matches.append(third_match)
+        # Запоминаем полуфиналы
+        if round_names[round_num] == "1/2":
+            semi_finals = next_round.copy()
+            print(f"  → Полуфиналы: {len(semi_finals)} матчей")
 
-            # Связываем полуфиналы с боем за 3 место
-            for i, semi in enumerate(semi_finals):
-                semi.third_place_match = third_match
-                semi.save()
-                print(f"  Полуфинал {i + 1} связан с боем за 3 место")
+        current_round = next_round
+
+    # БОЙ ЗА 3 МЕСТО
+    if semi_finals and len(semi_finals) >= 2 and total_rounds >= 3:
+        print(f"\nСоздание боя за 3 место")
+
+        third_match = Match(
+            tournament=tournament,
+            age_category=age_cat,
+            gender=gen,
+            weight_category=weight_cat,
+            round_number=total_rounds + 1,
+            round_name="Бой за 3 место",
+            match_order=match_order,
+            is_third_place_match=True
+        )
+        third_match.save()
+        all_matches.append(third_match)
+
+        for i, semi in enumerate(semi_finals):
+            semi.third_place_match = third_match
+            semi.save()
+            print(f"  Полуфинал {i + 1} связан с боем за 3 место")
 
     print(f"\nГенерация завершена. Всего матчей: {len(all_matches)}")
     return True
@@ -440,7 +481,7 @@ def process_excel_file(excel_file, tournament, clear_existing=False):
                 if 'Клуб' in df.columns and pd.notna(row['Клуб']):
                     club = str(row['Клуб']).strip()
 
-                # Обработка тренера - ВАЖНО для распределения
+                # Обработка тренера
                 coach = ''
                 if 'Тренер' in df.columns and pd.notna(row['Тренер']):
                     coach = str(row['Тренер']).strip()

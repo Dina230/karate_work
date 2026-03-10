@@ -5,40 +5,67 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <!-- Заголовок с цветным акцентом -->
-        <div class="d-flex justify-content-between align-items-center mb-5">
+        <!-- Заголовок -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h1 class="fw-400" style="color: #2c3e50; border-left: 4px solid #e74c3c; padding-left: 1rem;">Категории</h1>
-                <p class="text-secondary mt-2" style="color: #7f8c8d !important;">
-                    <i class="bi bi-calendar-event me-1" style="color: #3498db;"></i>
-                    {{ tournament.name }}
-                </p>
+                <h1 class="fw-400" style="color: #2c3e50;">Категории</h1>
+                <p class="text-muted small">{{ tournament.name }}</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="{% url 'participant_list' tournament.id %}" class="btn btn-outline-primary btn-sm" style="border-color: #3498db; color: #3498db;">
-                    <i class="bi bi-people"></i>
-                    <span class="d-none d-md-inline ms-1">Участники</span>
+                <a href="{% url 'participant_list' tournament.id %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-people"></i> Участники
                 </a>
-                <a href="{% url 'tournament_stats' tournament.id %}" class="btn btn-outline-info btn-sm" style="border-color: #2ecc71; color: #2ecc71;">
-                    <i class="bi bi-graph-up"></i>
-                    <span class="d-none d-md-inline ms-1">Статистика</span>
+                <a href="{% url 'tournament_stats' tournament.id %}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-graph-up"></i> Статистика
                 </a>
-                <a href="{% url 'generate_all_brackets' tournament.id %}" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #e74c3c, #c0392b); border-color: #e74c3c;">
-                    <i class="bi bi-grid"></i>
-                    <span class="d-none d-md-inline ms-1">Сгенерировать все</span>
+                <a href="{% url 'generate_all_brackets' tournament.id %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-grid"></i> Сгенерировать все
                 </a>
             </div>
         </div>
 
-        <!-- Фильтры с цветными иконками -->
-        <div class="card mb-4" style="border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
-            <div class="card-body p-4">
-                <form method="get" class="row g-3" id="filterForm">
+        <!-- Абсолютная категория (участники из малочисленных категорий) -->
+        {% if absolute_participants and absolute_participants.count >= 2 %}
+        <div class="card mb-4 border-warning">
+            <div class="card-header bg-warning text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-star-fill me-2"></i>
+                        Абсолютная категория
+                    </h5>
+                    <span class="badge bg-white text-warning">{{ absolute_participants.count }} участников</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">Участники из малочисленных весовых категорий:</p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    {% for cat in absolute_participants.small_categories %}
+                    <span class="badge bg-light text-dark border">
+                        {{ cat.age_category }} {{ cat.gender }} {{ cat.weight_category }} ({{ cat.count }})
+                    </span>
+                    {% endfor %}
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'absolute_category' tournament.id %}" class="btn btn-warning">
+                        <i class="bi bi-bracket"></i> Просмотр абсолютной сетки
+                    </a>
+                    <form method="post" action="{% url 'generate_absolute_bracket' tournament.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-warning">
+                            <i class="bi bi-lightning-charge"></i> Сгенерировать
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Фильтры -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
-                            <i class="bi bi-calendar-range me-1" style="color: #e74c3c;"></i>
-                            Возрастная категория
-                        </label>
+                        <label class="form-label small text-muted">Возрастная категория</label>
                         <select name="age" class="form-select" onchange="this.form.submit()">
                             <option value="">Все возраста</option>
                             {% for age in age_filters %}
@@ -50,10 +77,7 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
-                            <i class="bi bi-speedometer2 me-1" style="color: #3498db;"></i>
-                            Весовая категория
-                        </label>
+                        <label class="form-label small text-muted">Весовая категория</label>
                         <select name="weight" class="form-select" onchange="this.form.submit()">
                             <option value="">Все веса</option>
                             {% for weight in weight_filters %}
@@ -65,10 +89,7 @@
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
-                            <i class="bi bi-gender-ambiguous me-1" style="color: #9b59b6;"></i>
-                            Пол
-                        </label>
+                        <label class="form-label small text-muted">Пол</label>
                         <select name="gender" class="form-select" onchange="this.form.submit()">
                             <option value="">Все</option>
                             <option value="M" {% if selected_gender == 'M' %}selected{% endif %}>Мужчины</option>
@@ -77,244 +98,168 @@
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
-                            <i class="bi bi-flag me-1" style="color: #f39c12;"></i>
-                            Статус участников
-                        </label>
+                        <label class="form-label small text-muted">Статус</label>
                         <select name="status" class="form-select" onchange="this.form.submit()">
                             <option value="">Все</option>
-                            <option value="ready" {% if selected_status == 'ready' %}selected{% endif %}>Готовы к турниру (≥2)</option>
-                            <option value="not_ready" {% if selected_status == 'not_ready' %}selected{% endif %}>Мало участников (<2)</option>
+                            <option value="ready" {% if selected_status == 'ready' %}selected{% endif %}>Готовы (≥2)</option>
+                            <option value="not_ready" {% if selected_status == 'not_ready' %}selected{% endif %}>Мало (<2)</option>
                         </select>
                     </div>
 
-                    <div class="col-md-2">
-                        <label class="form-label small fw-500 mb-2" style="color: #2c3e50;">
-                            <i class="bi bi-check-circle me-1" style="color: #27ae60;"></i>
-                            Статус матчей
-                        </label>
-                        <select name="match_status" class="form-select" onchange="this.form.submit()">
-                            <option value="">Все матчи</option>
-                            <option value="completed" {% if selected_match_status == 'completed' %}selected{% endif %}>Завершенные</option>
-                            <option value="not_completed" {% if selected_match_status == 'not_completed' %}selected{% endif %}>Незавершенные</option>
-                        </select>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{% url 'category_list' tournament.id %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-eraser"></i> Сбросить
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Результаты фильтрации с цветным акцентом -->
+        <!-- Результаты фильтрации -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <p class="text-muted small mb-0">
-                <i class="bi bi-search me-1" style="color: #e74c3c;"></i>
-                Найдено категорий: <strong style="color: #e74c3c;">{{ page_obj.paginator.count }}</strong>
+                <i class="bi bi-search me-1"></i>
+                Найдено категорий: <strong>{{ page_obj.paginator.count }}</strong>
             </p>
-            <div>
-                <span class="badge" style="background-color: #e74c3c; color: white; padding: 0.5rem 1rem;">
-                    <i class="bi bi-grid"></i> {{ page_obj.paginator.count }} категорий
-                </span>
-            </div>
         </div>
 
-        <!-- Список категорий с пагинацией -->
+        <!-- Список обычных категорий -->
         <div class="row g-4">
             {% for key, data in page_obj %}
             <div class="col-lg-4 col-md-6">
-                <div class="card h-100 category-card" style="border: none; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden;">
-                    <!-- Цветная полоска сверху в зависимости от статуса завершенности -->
-                    <div style="height: 4px; background: {% if data.all_matches_completed %}linear-gradient(90deg, #27ae60, #2ecc71){% elif data.has_matches %}linear-gradient(90deg, #f39c12, #f1c40f){% else %}linear-gradient(90deg, #95a5a6, #7f8c8d){% endif %};"></div>
-
-                    <div class="card-header" style="background: white; border-bottom: 1px solid #ecf0f1; padding: 1.25rem 1.5rem;">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-0" style="color: #2c3e50;">{{ data.age_category }}</h5>
-                                {% if data.all_matches_completed %}
-                                    <span class="badge mt-1" style="background-color: #27ae60; color: white; font-size: 0.7rem;">
-                                        <i class="bi bi-check-circle-fill me-1"></i>Все матчи завершены
-                                    </span>
-                                {% elif data.has_matches %}
-                                    <span class="badge mt-1" style="background-color: #f39c12; color: white; font-size: 0.7rem;">
-                                        <i class="bi bi-hourglass-split me-1"></i>Есть незавершенные
-                                    </span>
-                                {% else %}
-                                    <span class="badge mt-1" style="background-color: #7f8c8d; color: white; font-size: 0.7rem;">
-                                        <i class="bi bi-dash-circle me-1"></i>Нет матчей
-                                    </span>
-                                {% endif %}
-                            </div>
-                            <span class="badge" style="background-color: #e74c3c; color: white; padding: 0.4rem 0.8rem; border-radius: 30px;">
-                                <i class="bi bi-gender-ambiguous me-1"></i>{{ data.gender }}
-                            </span>
+                            <h5 class="mb-0" style="color: #2c3e50;">{{ data.age_category }}</h5>
+                            <span class="badge bg-danger">{{ data.gender }}</span>
                         </div>
                     </div>
-
-                    <div class="card-body" style="padding: 1.5rem;">
-                        <h6 class="card-subtitle mb-3" style="color: #3498db;">
-                            <i class="bi bi-speedometer2 me-1"></i>
-                            {{ data.weight_category }}
-                        </h6>
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-secondary">{{ data.weight_category }}</h6>
 
                         <div class="row g-3 mb-3">
                             <div class="col-6">
-                                <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #fff5f5, #fee7e5);">
-                                    <div class="fs-3 fw-light" style="color: #e74c3c;">{{ data.count }}</div>
-                                    <small style="color: #7f8c8d;">участников</small>
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="fs-3 fw-light text-danger">{{ data.count }}</div>
+                                    <small class="text-secondary">участников</small>
                                 </div>
                             </div>
                             <div class="col-6">
-                                <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #e3f2fd, #d1ecff);">
-                                    <div class="fs-3 fw-light" style="color: #3498db;">{{ data.unique_clubs }}</div>
-                                    <small style="color: #7f8c8d;">клубов</small>
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="fs-3 fw-light text-primary">{{ data.unique_clubs }}</div>
+                                    <small class="text-secondary">клубов</small>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Статистика матчей -->
-                        <div class="mb-3 p-2 rounded" style="background-color: #f8f9fa;">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small style="color: #7f8c8d;">
-                                    <i class="bi bi-trophy me-1" style="color: #f39c12;"></i>
-                                    Всего матчей:
-                                </small>
-                                <span class="badge" style="background-color: #3498db; color: white;">{{ data.total_matches|default:"0" }}</span>
-                            </div>
-                            {% if data.total_matches > 0 %}
-                            <div class="progress mt-2" style="height: 6px;">
-                                <div class="progress-bar bg-success" style="width: {% widthratio data.completed_matches data.total_matches 100 %}%"></div>
-                                <div class="progress-bar bg-warning" style="width: {% widthratio data.pending_matches data.total_matches 100 %}%"></div>
-                            </div>
-                            <div class="d-flex justify-content-between mt-1">
-                                <small class="text-success">
-                                    <i class="bi bi-check-circle-fill me-1" style="font-size: 0.7rem;"></i>
-                                    {{ data.completed_matches }} завершено
-                                </small>
-                                <small class="text-warning">
-                                    <i class="bi bi-hourglass-split me-1" style="font-size: 0.7rem;"></i>
-                                    {{ data.pending_matches }} в процессе
-                                </small>
-                            </div>
-                            {% endif %}
-                        </div>
-
+                        <!-- Список клубов -->
                         {% if data.clubs %}
                         <div class="mb-3">
-                            <small class="d-block mb-2" style="color: #7f8c8d;">
-                                <i class="bi bi-building me-1" style="color: #9b59b6;"></i>
-                                Клубы:
-                            </small>
+                            <small class="text-muted d-block mb-1">Клубы:</small>
                             <div class="d-flex flex-wrap gap-1">
                                 {% for club in data.clubs|slice:":3" %}
-                                <span class="badge" style="background: linear-gradient(135deg, #ecf0f1, #e0e6e9); color: #2c3e50; padding: 0.4rem 0.8rem; border-radius: 30px;">
-                                    <i class="bi bi-building me-1"></i>{{ club|truncatechars:15 }}
-                                </span>
+                                <span class="badge bg-light text-dark">{{ club|truncatechars:15 }}</span>
                                 {% endfor %}
                                 {% if data.clubs|length > 3 %}
-                                <span class="badge" style="background: linear-gradient(135deg, #ecf0f1, #e0e6e9); color: #2c3e50; padding: 0.4rem 0.8rem; border-radius: 30px;">
-                                    +{{ data.clubs|length|add:"-3" }}
-                                </span>
+                                <span class="badge bg-light text-dark">+{{ data.clubs|length|add:"-3" }}</span>
                                 {% endif %}
                             </div>
                         </div>
                         {% endif %}
 
-                        <hr style="border-color: #ecf0f1; margin: 1.5rem 0;">
+                        <!-- Статистика матчей -->
+                        {% if data.has_matches %}
+                        <div class="mb-3 small">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-success">
+                                    <i class="bi bi-check-circle-fill"></i> {{ data.completed_matches }}
+                                </span>
+                                <span class="text-warning">
+                                    <i class="bi bi-hourglass-split"></i> {{ data.pending_matches }}
+                                </span>
+                            </div>
+                            <div class="progress mt-1" style="height: 4px;">
+                                <div class="progress-bar bg-success" style="width: {% widthratio data.completed_matches data.total_matches 100 %}%"></div>
+                                <div class="progress-bar bg-warning" style="width: {% widthratio data.pending_matches data.total_matches 100 %}%"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <hr>
 
                         {% if data.count >= 2 %}
                         <div class="d-grid gap-2">
                             <a href="{% url 'category_bracket' tournament.id data.age_category data.gender_code data.weight_category %}"
-                               class="btn btn-outline-primary w-100" style="border: 1px solid #e74c3c; color: #e74c3c; border-radius: 30px; padding: 0.5rem 1.25rem; transition: all 0.2s;">
+                               class="btn btn-outline-danger">
                                 <i class="bi bi-bracket"></i> Просмотр сетки
                             </a>
-
-                            <!-- Кнопка для генерации сетки конкретной категории -->
-                            <form method="post" action="{% url 'generate_bracket_for_category' tournament.id data.age_category data.gender_code data.weight_category %}" style="display: inline;">
+                            <form method="post" action="{% url 'generate_bracket_for_category' tournament.id data.age_category data.gender_code data.weight_category %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-success w-100" style="border: 1px solid #2ecc71; color: #2ecc71; border-radius: 30px; padding: 0.5rem 1.25rem; transition: all 0.2s;">
-                                    <i class="bi bi-lightning-charge"></i> Сгенерировать сетку
+                                <button type="submit" class="btn btn-outline-success">
+                                    <i class="bi bi-lightning-charge"></i> Сгенерировать
                                 </button>
                             </form>
-
-                            <!-- Индикатор завершенности -->
-                            {% if data.all_matches_completed %}
-                            <span class="badge w-100 py-2" style="background-color: #27ae60; color: white; border-radius: 30px;">
-                                <i class="bi bi-check-circle-fill me-1"></i> Все матчи завершены
-                            </span>
-                            {% elif data.has_matches %}
-                            <span class="badge w-100 py-2" style="background-color: #f39c12; color: white; border-radius: 30px;">
-                                <i class="bi bi-hourglass-split me-1"></i> {{ data.pending_matches }} матчей в процессе
-                            </span>
-                            {% endif %}
                         </div>
                         {% else %}
-                        <button class="btn w-100" style="border: 1px solid #bdc3c7; color: #95a5a6; border-radius: 30px; padding: 0.5rem 1.25rem;" disabled>
-                            <i class="bi bi-exclamation-triangle me-1" style="color: #f39c12;"></i>
+                        <div class="alert alert-secondary text-center mb-0">
+                            <i class="bi bi-exclamation-triangle"></i>
                             Мало участников ({{ data.count }})
-                        </button>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
             </div>
             {% empty %}
-            <!-- Пустое состояние -->
             <div class="col-12">
                 <div class="text-center py-5">
-                    <div style="font-size: 4rem; color: #e74c3c; opacity: 0.5;">
-                        <i class="bi bi-grid"></i>
-                    </div>
-                    <h3 class="fs-5 fw-400 mb-2" style="color: #2c3e50;">Нет категорий</h3>
-                    <p class="mb-4" style="color: #7f8c8d;">Зарегистрируйте участников, чтобы появились категории</p>
-                    <a href="{% url 'participant_list' tournament.id %}" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border-radius: 30px; padding: 0.5rem 1.5rem; border: none;">
-                        <i class="bi bi-people me-1"></i> Перейти к участникам
+                    <i class="bi bi-grid fs-1 text-muted mb-3 d-block"></i>
+                    <h4>Нет категорий</h4>
+                    <p class="text-muted">Зарегистрируйте участников, чтобы появились категории</p>
+                    <a href="{% url 'participant_list' tournament.id %}" class="btn btn-primary">
+                        <i class="bi bi-people"></i> Перейти к участникам
                     </a>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Пагинация с цветными акцентами -->
+        <!-- Пагинация -->
         {% if page_obj.paginator.num_pages > 1 %}
-        <div class="d-flex justify-content-center mt-5">
-            <nav aria-label="Навигация по категориям">
-                <ul class="pagination" style="gap: 5px;">
-                    <!-- Первая страница -->
+        <div class="d-flex justify-content-center mt-4">
+            <nav>
+                <ul class="pagination">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_match_status %}&match_status={{ selected_match_status }}{% endif %}" style="border: 1px solid #ecf0f1; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem;" aria-label="Первая">
-                            <i class="bi bi-chevron-double-left" style="color: #e74c3c;"></i>
+                        <a class="page-link" href="?page=1{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
                         </a>
                     </li>
-                    <!-- Предыдущая страница -->
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_match_status %}&match_status={{ selected_match_status }}{% endif %}" style="border: 1px solid #ecf0f1; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem;" aria-label="Предыдущая">
-                            <i class="bi bi-chevron-left" style="color: #e74c3c;"></i>
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
                         </a>
                     </li>
                     {% endif %}
 
-                    <!-- Номера страниц -->
                     {% for num in page_obj.paginator.page_range %}
                         {% if page_obj.number == num %}
-                            <li class="page-item active">
-                                <span class="page-link" style="border: none; border-radius: 30px; background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 0.5rem 1rem; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);">{{ num }}</span>
-                            </li>
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                         {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_match_status %}&match_status={{ selected_match_status }}{% endif %}" style="border: 1px solid #ecf0f1; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem;">{{ num }}</a>
+                                <a class="page-link" href="?page={{ num }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">{{ num }}</a>
                             </li>
                         {% endif %}
                     {% endfor %}
 
-                    <!-- Следующая страница -->
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_match_status %}&match_status={{ selected_match_status }}{% endif %}" style="border: 1px solid #ecf0f1; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem;" aria-label="Следующая">
-                            <i class="bi bi-chevron-right" style="color: #e74c3c;"></i>
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
                         </a>
                     </li>
-                    <!-- Последняя страница -->
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_match_status %}&match_status={{ selected_match_status }}{% endif %}" style="border: 1px solid #ecf0f1; border-radius: 30px; color: #7f8c8d; padding: 0.5rem 1rem;" aria-label="Последняя">
-                            <i class="bi bi-chevron-double-right" style="color: #e74c3c;"></i>
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_age %}&age={{ selected_age }}{% endif %}{% if selected_weight %}&weight={{ selected_weight }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
                         </a>
                     </li>
                     {% endif %}
@@ -322,210 +267,21 @@
             </nav>
         </div>
 
-        <!-- Информация о количестве записей -->
-        <div class="text-center mt-3">
-            <small style="color: #95a5a6;">
-                <i class="bi bi-layers me-1" style="color: #3498db;"></i>
+        <div class="text-center mt-2">
+            <small class="text-muted">
                 Показано {{ page_obj.start_index }} - {{ page_obj.end_index }} из {{ page_obj.paginator.count }} категорий
             </small>
         </div>
         {% endif %}
 
-        <!-- Краткая сводка с цветными акцентами -->
-        {% if total_categories > 0 %}
-        <div class="mt-5 pt-3 text-center">
-            <div class="d-inline-block p-3" style="background: linear-gradient(135deg, #f8f9fa, #ecf0f1); border-radius: 50px;">
-                <span class="mx-3" style="color: #7f8c8d;">
-                    <i class="bi bi-grid" style="color: #e74c3c;"></i>
-                    Всего категорий: <span style="color: #e74c3c; font-weight: 500;">{{ total_categories }}</span>
-                </span>
-                <span class="mx-2" style="color: #bdc3c7;">|</span>
-                <span class="mx-3" style="color: #7f8c8d;">
-                    <i class="bi bi-people" style="color: #3498db;"></i>
-                    Всего участников: <span style="color: #3498db; font-weight: 500;">{{ total_participants }}</span>
-                </span>
-                <span class="mx-2" style="color: #bdc3c7;">|</span>
-                <span class="mx-3" style="color: #7f8c8d;">
-                    <i class="bi bi-building" style="color: #9b59b6;"></i>
-                    Всего клубов: <span style="color: #9b59b6; font-weight: 500;">{{ total_clubs }}</span>
-                </span>
-            </div>
+        <!-- Краткая сводка -->
+        <div class="mt-4 text-center text-muted small">
+            <span class="mx-2">Всего категорий: <strong>{{ total_categories }}</strong></span>
+            <span class="mx-2">|</span>
+            <span class="mx-2">Всего участников: <strong>{{ total_participants }}</strong></span>
+            <span class="mx-2">|</span>
+            <span class="mx-2">Всего клубов: <strong>{{ total_clubs }}</strong></span>
         </div>
-        {% endif %}
     </div>
 </div>
-
-<!-- Дополнительные стили -->
-<style>
-/* Стили для фильтров */
-.form-select {
-    border: 2px solid #ecf0f1;
-    border-radius: 30px;
-    padding: 0.5rem 1.25rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background-color: white;
-}
-
-.form-select:focus {
-    border-color: #e74c3c;
-    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1);
-    outline: none;
-}
-
-.form-select:hover {
-    border-color: #bdc3c7;
-}
-
-/* Стили для кнопок фильтров */
-.btn-outline-secondary {
-    border: 2px solid #ecf0f1;
-    color: #7f8c8d;
-    border-radius: 30px;
-    padding: 0.5rem 1.25rem;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-secondary:hover {
-    background-color: #ecf0f1;
-    border-color: #bdc3c7;
-    color: #2c3e50;
-    transform: translateY(-2px);
-}
-
-/* Стили для карточек категорий */
-.category-card {
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.category-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(231, 76, 60, 0.2) !important;
-}
-
-.category-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, transparent 50%, rgba(231, 76, 60, 0.1) 50%);
-    border-radius: 0 0 0 50px;
-}
-
-/* Стили для кнопок в карточках */
-.btn-outline-primary {
-    border: 1px solid #e74c3c;
-    color: #e74c3c;
-    background: transparent;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-primary:hover {
-    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-    color: white !important;
-    border-color: #e74c3c !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
-}
-
-.btn-outline-success {
-    border: 1px solid #2ecc71;
-    color: #2ecc71;
-    background: transparent;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-success:hover {
-    background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
-    color: white !important;
-    border-color: #2ecc71 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
-}
-
-/* Стили для пагинации */
-.page-link {
-    border: 1px solid #ecf0f1;
-    border-radius: 30px;
-    color: #7f8c8d;
-    padding: 0.5rem 1rem;
-    transition: all 0.2s;
-}
-
-.page-link:hover {
-    background-color: #fee7e5 !important;
-    border-color: #e74c3c !important;
-    color: #e74c3c !important;
-    transform: scale(1.05);
-}
-
-.page-item.active .page-link {
-    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-    color: white !important;
-    border: none !important;
-    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
-}
-
-/* Бейджи */
-.badge {
-    font-weight: 500;
-    font-size: 0.85rem;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .form-select {
-        font-size: 0.9rem;
-        padding: 0.4rem 1rem;
-    }
-
-    .pagination {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .btn-sm {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-    }
-}
-</style>
-
-<script>
-// Сохранение параметров фильтрации при пагинации
-document.addEventListener('DOMContentLoaded', function() {
-    const filterForm = document.getElementById('filterForm');
-    const pageLinks = document.querySelectorAll('.page-link');
-
-    pageLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            const url = new URL(this.href, window.location.origin);
-            const params = new URLSearchParams(url.search);
-
-            // Добавляем текущие фильтры к ссылке пагинации
-            {% if selected_age %}
-            if (!params.has('age')) params.set('age', '{{ selected_age }}');
-            {% endif %}
-            {% if selected_weight %}
-            if (!params.has('weight')) params.set('weight', '{{ selected_weight }}');
-            {% endif %}
-            {% if selected_gender %}
-            if (!params.has('gender')) params.set('gender', '{{ selected_gender }}');
-            {% endif %}
-            {% if selected_status %}
-            if (!params.has('status')) params.set('status', '{{ selected_status }}');
-            {% endif %}
-            {% if selected_match_status %}
-            if (!params.has('match_status')) params.set('match_status', '{{ selected_match_status }}');
-            {% endif %}
-
-            this.href = url.pathname + '?' + params.toString();
-        });
-    });
-});
-</script>
 {% endblock %}
